@@ -1,7 +1,0 @@
-Para o correto funcionamento da automação:
-
-Na primeira vez que for usar a automação, abrir o Anki e clicar no baralho desejado. Após isso, clicar em "Adicionar" > "Campos..." > marcar a opção "Usar editor HTML por padrão" apenas na parte da frente do cartão.
-
-Após feita essa configuração, sempre que for utilizar, pode apenas:
-- Abrir o Anki, e deixar aberto no baralho desejado.
-- A partir disso, pode dar play!

@@ -57,4 +57,3 @@ for linha in sheet.iter_rows(min_row=2, min_col=1):
     qtd_frases += 1
 pg.alert(f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
 sleep(2)
-pg.hotkey('alt', 'f4')
