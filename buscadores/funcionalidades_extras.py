@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import re
+import openpyxl
 
 def buscador_de_frases(palavra):
     # Carregar apenas a terceira coluna
@@ -17,19 +18,28 @@ def buscador_de_frases(palavra):
     return lista_frases
 
 
-def buscador_de_traducoes():
+def tradutor_de_palavras(palavra_a_traduzir):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
     }
 
-    url = 'https://context.reverso.net/traducao/ingles-portugues/weather'
-
+    url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra_a_traduzir}'
     resposta = requests.get(url, headers=headers).text
-
     # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
     padrao_palavras = r'<span class="display-term">(.*?)</span>'
-    palavras = re.findall(padrao_palavras, resposta)
+    palavras = re.findall(padrao_palavras, resposta)[:4]
 
     return palavras
 
+def adicionar_na_planilha():
+    workbook = openpyxl.Workbook()
 
+    sheet = workbook['Sheet']
+
+
+
+if __name__ == '__main__':
+    palavras = ['weather', 'pineapple', 'keyboard', 'clip']
+
+    for palavra in palavras:
+        print(tradutor_de_palavras(palavra))
