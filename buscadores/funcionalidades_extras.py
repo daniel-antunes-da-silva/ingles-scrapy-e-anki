@@ -1,9 +1,9 @@
 from tkinter import filedialog
-
 import pandas as pd
 import requests
 import re
 import openpyxl
+import os
 from openpyxl.worksheet.worksheet import Worksheet
 
 def buscador_de_frases(palavra):
