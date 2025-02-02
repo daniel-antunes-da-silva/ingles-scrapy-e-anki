@@ -1,7 +1,10 @@
+from tkinter import filedialog
+
 import pandas as pd
 import requests
 import re
 import openpyxl
+from openpyxl.worksheet.worksheet import Worksheet
 
 def buscador_de_frases(palavra):
     # Carregar apenas a terceira coluna
@@ -31,11 +34,33 @@ def tradutor_de_palavras(palavra_a_traduzir):
 
     return palavras
 
-def adicionar_na_planilha():
-    workbook = openpyxl.Workbook()
 
-    sheet = workbook['Sheet']
+class GerenciadorPlanilha:
+    def __init__(self):
+        self.planilha = openpyxl.Workbook()
+        self.sheet: Worksheet = self.planilha['Sheet']
+        self.sheet.append(['Frase', 'Palavra', 'Tradução'])
 
+    def adicionar_dados(self, frase, palavra, significados):
+        self.sheet.append([frase, palavra, significados])
+
+    def salvar_planilha(self):
+        caminho = filedialog.asksaveasfilename(
+            title='Escolha o local para salvar',
+            filetypes=[('Arquivo de planilha', '*.xlsx')],
+            defaultextension='.xlsx',
+            confirmoverwrite=True
+        )
+        self.planilha.save(caminho)
+
+        if caminho:
+            try:
+                self.planilha.save(caminho)
+                print(f"Planilha salva com sucesso em: {caminho}")
+            except Exception as e:
+                print(f"Erro ao salvar a planilha: {e}")
+        else:
+            print("Salvamento cancelado pelo usuário.")
 
 
 if __name__ == '__main__':
