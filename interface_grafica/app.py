@@ -1,6 +1,8 @@
-from customtkinter import *
-from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
 from threading import Thread
+
+from customtkinter import *
+
+from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
 
 
 class JanelaIngles(CTk):
@@ -9,20 +11,30 @@ class JanelaIngles(CTk):
 
         set_appearance_mode('dark')
 
-        self.geometry('500x350')
+        self.geometry('650x450')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.configure(padx=20, pady=20)
         self.title('Escolher funcionalidade')
 
-        self.frame_traducao = FrameTraducao(master=self)
-        self.frame_traducao.grid(row=0, column=0, sticky='nsew')
-
         self.frame_inicial = FrameEscolhaInicial(master=self, janela_principal=self, fg_color='transparent')
         self.frame_inicial.grid(row=0, column=0, sticky='nsew')
 
+        self.frame_traducao = FrameTraducao(master=self, janela_principal=self)
+        self.frame_traducao.grid(row=0, column=0, sticky='nsew')
+
+        self.frame_anki = FrameAnki(master=self, janela_principal=self)
+        self.frame_anki.grid(row=0, column=0, sticky='nsew')
+        self.frame_inicial.tkraise()
+
     def exibir_frame_traducao(self):
         self.frame_traducao.tkraise()
+
+    def exibir_frame_anki(self):
+        self.frame_anki.tkraise()
+
+    def exibir_frame_inicial(self):
+        self.frame_inicial.tkraise()
 
 
 class FrameEscolhaInicial(CTkFrame):
@@ -33,37 +45,75 @@ class FrameEscolhaInicial(CTkFrame):
 
         self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200, command=janela_principal.exibir_frame_traducao)
         self.btn_iniciar_janela_buscas.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
-        self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200)
+        self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200, command=janela_principal.exibir_frame_anki)
         self.btn_iniciar_automacao.grid(row=0, column=1, padx=10, pady=10, sticky='nsew')
 
 
+class FrameAnki(CTkFrame):
+    def __init__(self, janela_principal, master, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.janela_principal = janela_principal
+        self.grid_anchor('center')
+
+        fonte_titulo = CTkFont(size=16, weight='bold')
+        texto_titulo = 'Para iniciar a automação do Anki sem erros, é importante seguir esses passos:'
+        texto = '''
+1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções, no formato correto.
+2º - Abra o Anki e deixe selecionado o baralho (deck) que deseja inserir as frases e traduções.
+3º - Clique em iniciar e clique na janela do Anki para mantê-la selecionada'''
+        CTkLabel(self, text=texto_titulo, font=fonte_titulo, justify='left', wraplength=600).grid(
+            row=0, column=0, padx=10, columnspan=2)
+        CTkLabel(self, text=texto, justify='left', wraplength=550).grid(
+            row=1, column=0, padx=10, pady=(0, 20), columnspan=2)
+        self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330)
+        self.campo_arquivo.grid(row=2, column=0, padx=10, pady=10, sticky='ew')
+        self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo)
+        self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10)
+        self.botao_iniciar = CTkButton(self, text='Iniciar')
+        self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
+        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
+        self.botao_voltar.grid(row=3, column=1, padx=10, pady=20)
+
+    def selecionar_arquivo(self):
+        caminho_arquivo = filedialog.askopenfilename(
+            title='Selecionar arquivo',
+            filetypes=[('Arquivo de planilha', '*.xlsx')]
+        )
+        if caminho_arquivo:
+            self.campo_arquivo.insert(0, caminho_arquivo)
+
+    def iniciar_automacao_anki(self):
+        pass
+
+
 class FrameTraducao(CTkFrame):
-    def __init__(self, master, *args, **kwargs):
+    def __init__(self, janela_principal, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
+        self.janela_principal = janela_principal
         self.palavras_formatadas = None
         self.grid_anchor('center')
 
-        set_appearance_mode('dark')
-
         self.texto_palavras = CTkLabel(self, text='Digite palavras em inglês separadas por vírgula')
-        self.texto_palavras.grid(row=0, column=0, padx=10, pady=10, sticky='w')
+        self.texto_palavras.grid(row=0, column=0, padx=10, pady=10, sticky='w', columnspan=2)
         self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', width=300)
-        self.campo_palavras.grid(row=1, column=0, padx=10, pady=10, sticky='w')
+        self.campo_palavras.grid(row=1, column=0, padx=10, pady=10, sticky='w', columnspan=2)
         self.texto_informativo = CTkLabel(self, text='')
         self.texto_informativo.grid(row=2, column=0, padx=10)
-        self.botao_traduzir = CTkButton(self, text='Avançar', command=self.iniciar_thread_avancar)
-        self.botao_traduzir.grid(row=3, column=0, padx=10, pady=10)
+        self.botao_avancar = CTkButton(self, text='Avançar', command=self.iniciar_thread_avancar)
+        self.botao_avancar.grid(row=3, column=0, padx=10, pady=10, sticky='ew')
+        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
+        self.botao_voltar.grid(row=3, column=1, padx=10, pady=10)
 
     def avancar_etapa(self):
-        self.botao_traduzir.configure(state='disabled')
+        self.botao_avancar.configure(state='disabled')
         self.texto_informativo.configure(text='')
         palavras_digitadas = self.campo_palavras.get().split(',')
         self.palavras_formatadas = [palavra.strip() for palavra in palavras_digitadas]
 
         JanelaExibicaoFrases(self.palavras_formatadas)
 
-        self.botao_traduzir.configure(state='normal')
+        self.botao_avancar.configure(state='normal')
 
     def iniciar_thread_avancar(self):
         if self.campo_palavras.get() != '':
@@ -101,7 +151,6 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Chamando a função que cria as abas e radiobuttons
         self.criar_abas_e_radiobuttons(palavras)
-
 
     def criar_abas_e_radiobuttons(self, palavras):
         for palavra in palavras:
