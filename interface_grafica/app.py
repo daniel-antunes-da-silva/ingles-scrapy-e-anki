@@ -1,9 +1,7 @@
 from threading import Thread
-
 from customtkinter import *
-
 from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
-
+from anki_automation import automatizar_anki
 
 class JanelaIngles(CTk):
     def __init__(self, *args, **kwargs):
@@ -69,21 +67,27 @@ class FrameAnki(CTkFrame):
         self.campo_arquivo.grid(row=2, column=0, padx=10, pady=10, sticky='ew')
         self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo)
         self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10)
-        self.botao_iniciar = CTkButton(self, text='Iniciar')
+        self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.iniciar_thread_anki)
         self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
         self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20)
 
     def selecionar_arquivo(self):
-        caminho_arquivo = filedialog.askopenfilename(
+        self.caminho_arquivo = filedialog.askopenfilename(
             title='Selecionar arquivo',
             filetypes=[('Arquivo de planilha', '*.xlsx')]
         )
-        if caminho_arquivo:
-            self.campo_arquivo.insert(0, caminho_arquivo)
+        if self.caminho_arquivo:
+            self.campo_arquivo.insert(0, self.caminho_arquivo)
 
-    def iniciar_automacao_anki(self):
-        pass
+    def iniciar_thread_anki(self):
+        def iniciar_automacao_anki():
+            self.botao_iniciar.configure(state='disabled')
+            automatizar_anki(self.caminho_arquivo)
+            self.botao_iniciar.configure(state='normal')
+
+        thread_anki = Thread(target=iniciar_automacao_anki, daemon=True)
+        thread_anki.start()
 
 
 class FrameTraducao(CTkFrame):
