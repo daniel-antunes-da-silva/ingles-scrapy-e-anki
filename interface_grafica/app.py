@@ -2,6 +2,7 @@ from threading import Thread
 from customtkinter import *
 from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
 from anki_automation import automatizar_anki
+from tkinter import messagebox
 
 class JanelaIngles(CTk):
     def __init__(self, *args, **kwargs):
@@ -112,10 +113,26 @@ class FrameTraducao(CTkFrame):
     def avancar_etapa(self):
         self.botao_avancar.configure(state='disabled')
         self.texto_informativo.configure(text='')
-        palavras_digitadas = self.campo_palavras.get().split(',')
-        self.palavras_formatadas = [palavra.strip() for palavra in palavras_digitadas]
 
-        JanelaExibicaoFrases(self.palavras_formatadas)
+        # Manipulação de strings
+        palavras_digitadas = self.campo_palavras.get().replace(' ', '').split(',')
+        self.palavras_formatadas = []
+        # List comprehension - Nesse caso, serve para adicionar cada palavra que não
+        # for um espaço vazio dentro da lista self.palavras_formatadas.
+        self.palavras_formatadas = []
+        for palavra in palavras_digitadas:
+            if palavra != '' and palavra.isalpha():
+                self.palavras_formatadas.append(palavra)
+        print(f'Palavras formatadas após o loop = {self.palavras_formatadas}')
+        if not self.palavras_formatadas:
+            self.texto_informativo.configure(text='Corrija as palavras digitadas.')
+        else:
+            try:
+                JanelaExibicaoFrases(self.palavras_formatadas)
+            except Exception as e:
+                self.texto_informativo.configure(
+                    text=f'Ocorreu algum erro durante a busca. Tente novamente!',
+                    wraplength=300)
 
         self.botao_avancar.configure(state='normal')
 
@@ -132,7 +149,8 @@ class JanelaExibicaoFrases(CTkToplevel):
         super().__init__(*args, **kwargs)
 
         self.palavras_formatadas = palavras
-        print(f'Palavras formatadas: {palavras}')
+        print(f'Palavras formatadas dentro da classe: {palavras}')
+
 
         self.geometry('600x800')
         self.state('zoomed')
@@ -157,9 +175,12 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.criar_abas_e_radiobuttons(palavras)
 
     def criar_abas_e_radiobuttons(self, palavras):
-        for palavra in palavras:
-            aba_palavra = self.gerenciador_abas.add(palavra)
+        for i, palavra in enumerate(palavras, start=3):
             frases_a_exibir = buscador_de_frases(palavra)
+            if not frases_a_exibir:
+                CTkLabel(self, text=f'Palavra {palavra} não encontrada. Verifique a grafia', text_color='yellow').grid(row=i, column=0, padx=5, pady=5)
+                continue
+            aba_palavra = self.gerenciador_abas.add(palavra)
 
             var_frase = StringVar()
             # Mapeia a palavra à sua StringVar, ou seja, associa cada palavra à sua StringVar

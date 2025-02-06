@@ -7,18 +7,23 @@ import os
 from openpyxl.worksheet.worksheet import Worksheet
 
 def buscador_de_frases(palavra):
-    # Carregar apenas a terceira coluna
-    df = pd.read_csv('C:\\Users\\Daniel\\Documents\\Projetos Python\\projeto_inglês\\buscadores\\eng_sentences.tsv', sep="\t", names=['frase'], usecols=[2], dtype=str)
+    try:
+        # Carregar apenas a terceira coluna
+        df = pd.read_csv('C:\\Users\\Daniel\\Documents\\Projetos Python\\projeto_inglês\\buscadores\\eng_sentences.tsv', sep="\t", names=['frase'], usecols=[2], dtype=str)
+    except FileNotFoundError:
+        return None
+    try:
+        # Filtrar frases que contêm a palavra desejada (ignorando maiúsculas/minúsculas)
+        resultado = df[df['frase'].str.contains(f' {palavra} ', case=False, na=False)]
 
-    # Filtrar frases que contêm a palavra desejada (ignorando maiúsculas/minúsculas)
-    resultado = df[df['frase'].str.contains(f' {palavra} ', case=False, na=False)]
+        lista_frases = resultado.sample(10)['frase'].tolist()
 
-    lista_frases = resultado.sample(10)['frase'].tolist()
+        # Exibir algumas frases encontradas
+        print(lista_frases)
 
-    # Exibir algumas frases encontradas
-    print(lista_frases)
-
-    return lista_frases
+        return lista_frases
+    except Exception as e:
+        return None
 
 
 def tradutor_de_palavras(palavra_a_traduzir):
