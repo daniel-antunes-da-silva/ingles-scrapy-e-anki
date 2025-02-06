@@ -4,6 +4,7 @@ from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_pa
 from anki_automation import automatizar_anki
 from tkinter import messagebox
 
+
 class JanelaIngles(CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
