@@ -22,6 +22,7 @@ def buscador_de_frases(palavra, contador_offset):
         frases_encontradas = []
         for frase in resultado_frases:
             frases_encontradas.append(frase[0])
+        print(frases_encontradas)
         return frases_encontradas
 
 

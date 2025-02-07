@@ -24,6 +24,7 @@ def automatizar_anki(arquivo):
         if 'Anki' in titulo:
             titulo_anki = titulo
 
+
     janela_anki = pygetwindow.getWindowsWithTitle(titulo_anki)[0]
 
     if janela_anki.isMaximized:
@@ -34,6 +35,7 @@ def automatizar_anki(arquivo):
         messagebox.showinfo(
             title='Atenção!',
             message='Verifique se o Anki está em execução e com a janela SELECIONADA antes de prosseguir')
+        return
 
     sleep(3)
     pg.press('a')
@@ -51,23 +53,23 @@ def automatizar_anki(arquivo):
         else:
             frase_formatada = frase[0].capitalize() + f'<b>{palavra}</b>' + frase[1]
 
-        sleep(0.3)
-        write_message(frase_formatada)
         sleep(0.6)
+        write_message(frase_formatada)
+        sleep(1)
         # selecionar frase
         pg.hotkey('ctrl', 'a')
-        sleep(0.6)
+        sleep(1)
         # abrir extensão do áudio
         pg.hotkey('ctrl', 't')
-        sleep(1.2)
+        sleep(1.5)
         # Colocar áudio
         pg.hotkey('ctrl', 'enter')
-        sleep(1.2)
+        sleep(1.5)
         # Pular para a linha de baixo
         pg.press('tab')
-        sleep(1.2)
+        sleep(1.5)
         write_message(traducao_palavra)
-        sleep(0.6)
+        sleep(1)
         pg.hotkey('ctrl', 'enter')
         qtd_frases += 1
     messagebox.showinfo(title='Finalizado!', message=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')

@@ -123,7 +123,7 @@ class FrameTraducao(CTkFrame):
             # Essa verificação é feita para garantir que a palavra tenha um valor e que seja
             # alfa (apenas letras) ou que tenha hífen.
             # Uma opção mais segura seria usar regex, mas acredito que não tenha problema.
-            if palavra != '' and (palavra.isalpha() or '-' in palavra):
+            if palavra != '' and (palavra.isalpha() or "-" in palavra or "'" in palavra):
                 self.palavras_formatadas.append(palavra)
         print(f'Palavras formatadas após o loop = {self.palavras_formatadas}')
         if not self.palavras_formatadas:
@@ -171,6 +171,8 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.gerenciador_abas = CTkTabview(self)
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
 
+        self.gerenciador_abas.configure(width=200)
+
         self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
         self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
 
@@ -180,6 +182,25 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Chamando a função que cria as abas e radiobuttons
         self.criar_abas_e_radiobuttons(palavras)
+
+    def formatar_frases_para_exibicao(self, frases):
+        # Nesse trecho de código, estou formatando as frases apenas para EXIBIÇÃO.
+        # Ou seja, para que elas não sejam exibidas de modo muito GRANDE.
+        # Essa exibição faz quebras de linhas
+        frases_formatadas = []
+        for frase in frases:
+            if frase.count(' ') >= 15:
+                frase = frase.split(' ')
+                frase_copia = ''
+
+                for indice, trecho_da_frase in enumerate(frase, start=0):
+                    if indice % 15 == 0 and indice != 0:
+                        frase_copia += os.linesep
+                    frase_copia += trecho_da_frase + ' '
+                frases_formatadas.append(frase_copia.strip())
+            else:
+                frases_formatadas.append(frase)
+        return frases_formatadas
 
     def criar_abas_e_radiobuttons(self, palavras):
         for i, palavra in enumerate(palavras, start=3):
@@ -197,7 +218,9 @@ class JanelaExibicaoFrases(CTkToplevel):
 
             # Dentro da aba específica da palavra atual do loop, adiciona um radiobutton para cada frase encontrada.
             for indice, frase in enumerate(frases_a_exibir, start=2):
-                CTkRadioButton(self.aba_palavra, text=frase, variable=self.var_frases[palavra], value=frase, command=self.verificar_selecao).grid(
+                # Apenas exibe a frase formatada, mas não será o valor associado a ela, e sim a frase sem formatação (sem quebra de linha).
+                frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
+                CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra], value=frase, command=self.verificar_selecao).grid(
                     row=indice, column=0, padx=10, pady=10, sticky='w')
             self.botao_gerar = CTkButton(self.aba_palavra, text='Gerar mais', command=self.gerar_frases)
             self.botao_gerar.grid(row=12, column=0, padx=10, pady=10)
@@ -205,9 +228,12 @@ class JanelaExibicaoFrases(CTkToplevel):
     def gerar_frases(self):
         palavra = self.gerenciador_abas.get()
         aba_atual = self.gerenciador_abas.tab(palavra)
-
         self.contador += 10
+
         novas_frases = buscador_de_frases(palavra, self.contador)
+
+        if not novas_frases:
+            return
 
         # Remove os radiobuttons existentes
         for widget in aba_atual.winfo_children():
@@ -216,7 +242,9 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Recria os radiobuttons com as novas frases
         for indice, frase in enumerate(novas_frases, start=2):
-            CTkRadioButton(aba_atual, text=frase, variable=self.var_frases[palavra],
+            # Apenas exibe a frase formatada, mas não será o valor associado a ela, e sim a frase sem formatação (sem quebra de linha).
+            frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
+            CTkRadioButton(aba_atual, text=frase_formatada, variable=self.var_frases[palavra],
                            value=frase, command=self.verificar_selecao).grid(
                 row=indice, column=0, padx=10, pady=10, sticky='w')
 
