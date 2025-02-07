@@ -9,7 +9,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 
 def buscador_de_frases(palavra):
-    with sqlite3.connect('frases.db') as conexao:
+    with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
         cursor = conexao.cursor()
         cursor.execute('''
         SELECT texto
@@ -20,7 +20,7 @@ def buscador_de_frases(palavra):
         resultado_frases = cursor.fetchmany(10)
         frases_encontradas = []
         for frase in resultado_frases:
-            frases_encontradas.append(frase)
+            frases_encontradas.append(frase[0])
         print(frases_encontradas)
         return frases_encontradas
 #     try:

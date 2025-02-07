@@ -116,7 +116,6 @@ class FrameTraducao(CTkFrame):
 
         # Manipulação de strings
         palavras_digitadas = self.campo_palavras.get().replace(' ', '').split(',')
-        self.palavras_formatadas = []
         # List comprehension - Nesse caso, serve para adicionar cada palavra que não
         # for um espaço vazio dentro da lista self.palavras_formatadas.
         self.palavras_formatadas = []
