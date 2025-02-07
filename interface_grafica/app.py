@@ -164,6 +164,8 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.grab_set()
         self.focus_force()
 
+        self.contador = 0
+
         self.texto_frases = CTkLabel(self, text='Exemplos de frases')
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
         self.gerenciador_abas = CTkTabview(self)
@@ -178,27 +180,45 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Chamando a função que cria as abas e radiobuttons
         self.criar_abas_e_radiobuttons(palavras)
-        # Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
-        # janela_carregamento.destroy()
 
     def criar_abas_e_radiobuttons(self, palavras):
         for i, palavra in enumerate(palavras, start=3):
-            frases_a_exibir = buscador_de_frases(palavra)
+            frases_a_exibir = buscador_de_frases(palavra, self.contador)
             if not frases_a_exibir:
                 CTkLabel(self, text=f'Palavra "{palavra}" não encontrada. Verifique a grafia.',
                          text_color='yellow').grid(row=i, column=0, padx=5, pady=5)
                 continue
 
-            aba_palavra = self.gerenciador_abas.add(palavra)
+            self.aba_palavra = self.gerenciador_abas.add(palavra)
 
-            var_frase = StringVar()
             # Mapeia a palavra à sua StringVar, ou seja, associa cada palavra à sua StringVar
             # para armazenar a frase selecionada pelo usuário.
-            self.var_frases[palavra] = var_frase
+            self.var_frases[palavra] = StringVar()
+
             # Dentro da aba específica da palavra atual do loop, adiciona um radiobutton para cada frase encontrada.
             for indice, frase in enumerate(frases_a_exibir, start=2):
-                CTkRadioButton(aba_palavra, text=frase, variable=var_frase, value=frase, command=self.verificar_selecao).grid(
+                CTkRadioButton(self.aba_palavra, text=frase, variable=self.var_frases[palavra], value=frase, command=self.verificar_selecao).grid(
                     row=indice, column=0, padx=10, pady=10, sticky='w')
+            self.botao_gerar = CTkButton(self.aba_palavra, text='Gerar mais', command=self.gerar_frases)
+            self.botao_gerar.grid(row=12, column=0, padx=10, pady=10)
+
+    def gerar_frases(self):
+        palavra = self.gerenciador_abas.get()
+        aba_atual = self.gerenciador_abas.tab(palavra)
+
+        self.contador += 10
+        novas_frases = buscador_de_frases(palavra, self.contador)
+
+        # Remove os radiobuttons existentes
+        for widget in aba_atual.winfo_children():
+            if isinstance(widget, CTkRadioButton):
+                widget.destroy()
+
+        # Recria os radiobuttons com as novas frases
+        for indice, frase in enumerate(novas_frases, start=2):
+            CTkRadioButton(aba_atual, text=frase, variable=self.var_frases[palavra],
+                           value=frase, command=self.verificar_selecao).grid(
+                row=indice, column=0, padx=10, pady=10, sticky='w')
 
     def verificar_selecao(self):
         valores_selecionados = []
@@ -209,7 +229,6 @@ class JanelaExibicaoFrases(CTkToplevel):
 
     def salvar_dados(self):
         planilha = GerenciadorPlanilha()
-
         for palavra, var_frase in self.var_frases.items():
             significados_palavra = tradutor_de_palavras(palavra)
             significados_palavra = ', '.join(significados_palavra)
@@ -218,23 +237,6 @@ class JanelaExibicaoFrases(CTkToplevel):
             print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
 
         planilha.salvar_planilha()
-
-
-# Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
-# class PopupCarregamento(CTkToplevel):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#         self.title('Aguarde...')
-#         self.grid_anchor('center')
-#         self.geometry('300x100')
-#         self.configure(padx=20, pady=20)
-#
-#         CTkLabel(self, text='Carregamento em andamento...').grid(row=0, column=0, padx=10, pady=10)
-#
-#         self.focus_force()
-#         self.grab_set()
-#         self.overrideredirect(True)  # Remove a barra de título
 
 
 app = JanelaIngles()

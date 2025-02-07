@@ -8,7 +8,7 @@ from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 
 
-def buscador_de_frases(palavra):
+def buscador_de_frases(palavra, contador_offset):
     with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
         cursor = conexao.cursor()
         cursor.execute('''
@@ -16,30 +16,13 @@ def buscador_de_frases(palavra):
         FROM frases
         WHERE texto LIKE ?
         LIMIT 10
-        ''', (f'%{palavra}%',))
+        OFFSET ?
+        ''', (f'%{palavra}%', contador_offset))
         resultado_frases = cursor.fetchmany(10)
         frases_encontradas = []
         for frase in resultado_frases:
             frases_encontradas.append(frase[0])
-        print(frases_encontradas)
         return frases_encontradas
-#     try:
-#         # Carregar apenas a terceira coluna
-#         df = pd.read_csv(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\eng_sentences.tsv', sep="\t", names=['frase'], usecols=[2], dtype=str)
-#     except FileNotFoundError:
-#         return None
-#     try:
-#         # Filtrar frases que contêm a palavra desejada (ignorando maiúsculas/minúsculas)
-#         resultado = df[df['frase'].str.contains(f' {palavra} ', case=False, na=False)]
-#
-#         lista_frases = resultado.sample(10)['frase'].tolist()
-#
-#         # Exibir algumas frases encontradas
-#         print(lista_frases)
-#
-#         return lista_frases
-#     except Exception as e:
-#         return None
 
 
 def tradutor_de_palavras(palavra_a_traduzir):
