@@ -105,7 +105,7 @@ class FrameTraducao(CTkFrame):
         self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', width=300)
         self.campo_palavras.grid(row=1, column=0, padx=10, pady=10, sticky='w', columnspan=2)
         self.texto_informativo = CTkLabel(self, text='')
-        self.texto_informativo.grid(row=2, column=0, padx=10)
+        self.texto_informativo.grid(row=2, column=0, padx=10, columnspan=2)
         self.botao_avancar = CTkButton(self, text='Avançar', command=self.iniciar_thread_avancar)
         self.botao_avancar.grid(row=3, column=0, padx=10, pady=10, sticky='ew')
         self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
@@ -122,7 +122,10 @@ class FrameTraducao(CTkFrame):
         # for um espaço vazio dentro da lista self.palavras_formatadas.
         self.palavras_formatadas = []
         for palavra in palavras_digitadas:
-            if palavra != '' and palavra.isalpha():
+            # Essa verificação é feita para garantir que a palavra tenha um valor e que seja
+            # alfa (apenas letras) ou que tenha hífen.
+            # Uma opção mais segura seria usar regex, mas acredito que não tenha problema.
+            if palavra != '' and (palavra.isalpha() or '-' in palavra):
                 self.palavras_formatadas.append(palavra)
         print(f'Palavras formatadas após o loop = {self.palavras_formatadas}')
         if not self.palavras_formatadas:
@@ -130,7 +133,7 @@ class FrameTraducao(CTkFrame):
         else:
             try:
                 JanelaExibicaoFrases(self.palavras_formatadas)
-            except Exception as e:
+            except:
                 self.texto_informativo.configure(
                     text=f'Ocorreu algum erro durante a busca. Tente novamente!',
                     wraplength=300)
@@ -149,9 +152,11 @@ class JanelaExibicaoFrases(CTkToplevel):
     def __init__(self, palavras, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
+        # janela_carregamento = PopupCarregamento(self)
+
         self.palavras_formatadas = palavras
         print(f'Palavras formatadas dentro da classe: {palavras}')
-
 
         self.geometry('600x800')
         self.state('zoomed')
@@ -159,13 +164,14 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.configure(padx=20, pady=20)
         self.grid_anchor('center')
         self.grab_set()
+        self.focus_force()
 
         self.texto_frases = CTkLabel(self, text='Exemplos de frases')
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
         self.gerenciador_abas = CTkTabview(self)
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
 
-        self.botao_salvar = CTkButton(self, text='Salvar dados', command=self.salvar_dados)
+        self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
         self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
 
         # Cria uma variável StringVar para armazenar a frase selecionada pelo usuário.
@@ -174,13 +180,17 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Chamando a função que cria as abas e radiobuttons
         self.criar_abas_e_radiobuttons(palavras)
+        # Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
+        # janela_carregamento.destroy()
 
     def criar_abas_e_radiobuttons(self, palavras):
         for i, palavra in enumerate(palavras, start=3):
             frases_a_exibir = buscador_de_frases(palavra)
             if not frases_a_exibir:
-                CTkLabel(self, text=f'Palavra {palavra} não encontrada. Verifique a grafia', text_color='yellow').grid(row=i, column=0, padx=5, pady=5)
+                CTkLabel(self, text=f'Palavra "{palavra}" não encontrada. Verifique a grafia.',
+                         text_color='yellow').grid(row=i, column=0, padx=5, pady=5)
                 continue
+
             aba_palavra = self.gerenciador_abas.add(palavra)
 
             var_frase = StringVar()
@@ -189,8 +199,15 @@ class JanelaExibicaoFrases(CTkToplevel):
             self.var_frases[palavra] = var_frase
             # Dentro da aba específica da palavra atual do loop, adiciona um radiobutton para cada frase encontrada.
             for indice, frase in enumerate(frases_a_exibir, start=2):
-                CTkRadioButton(aba_palavra, text=frase, variable=var_frase, value=frase).grid(
+                CTkRadioButton(aba_palavra, text=frase, variable=var_frase, value=frase, command=self.verificar_selecao).grid(
                     row=indice, column=0, padx=10, pady=10, sticky='w')
+
+    def verificar_selecao(self):
+        valores_selecionados = []
+        for valor in self.var_frases.values():
+            valores_selecionados.append(valor.get())
+        if all(valores_selecionados):
+            self.botao_salvar.configure(state='normal')
 
     def salvar_dados(self):
         planilha = GerenciadorPlanilha()
@@ -203,6 +220,23 @@ class JanelaExibicaoFrases(CTkToplevel):
             print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
 
         planilha.salvar_planilha()
+
+
+# Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
+# class PopupCarregamento(CTkToplevel):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#         self.title('Aguarde...')
+#         self.grid_anchor('center')
+#         self.geometry('300x100')
+#         self.configure(padx=20, pady=20)
+#
+#         CTkLabel(self, text='Carregamento em andamento...').grid(row=0, column=0, padx=10, pady=10)
+#
+#         self.focus_force()
+#         self.grab_set()
+#         self.overrideredirect(True)  # Remove a barra de título
 
 
 app = JanelaIngles()
