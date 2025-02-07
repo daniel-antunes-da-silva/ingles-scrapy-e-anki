@@ -1,8 +1,7 @@
 from threading import Thread
 from customtkinter import *
-from buscadores.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
-from anki_automation import automatizar_anki
-from tkinter import messagebox
+from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
+from arquivos_extras.anki_automation import automatizar_anki
 
 
 class JanelaIngles(CTk):

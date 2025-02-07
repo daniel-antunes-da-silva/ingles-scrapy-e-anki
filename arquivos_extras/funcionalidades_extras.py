@@ -1,29 +1,45 @@
-from tkinter import filedialog
 import pandas as pd
 import requests
 import re
 import openpyxl
 import os
+import sqlite3
+from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 
+
 def buscador_de_frases(palavra):
-    try:
-        # Carregar apenas a terceira coluna
-        df = pd.read_csv('C:\\Users\\Daniel\\Documents\\Projetos Python\\projeto_inglês\\buscadores\\eng_sentences.tsv', sep="\t", names=['frase'], usecols=[2], dtype=str)
-    except FileNotFoundError:
-        return None
-    try:
-        # Filtrar frases que contêm a palavra desejada (ignorando maiúsculas/minúsculas)
-        resultado = df[df['frase'].str.contains(f' {palavra} ', case=False, na=False)]
-
-        lista_frases = resultado.sample(10)['frase'].tolist()
-
-        # Exibir algumas frases encontradas
-        print(lista_frases)
-
-        return lista_frases
-    except Exception as e:
-        return None
+    with sqlite3.connect('frases.db') as conexao:
+        cursor = conexao.cursor()
+        cursor.execute('''
+        SELECT texto
+        FROM frases
+        WHERE texto LIKE ?
+        LIMIT 10
+        ''', (f'%{palavra}%',))
+        resultado_frases = cursor.fetchmany(10)
+        frases_encontradas = []
+        for frase in resultado_frases:
+            frases_encontradas.append(frase)
+        print(frases_encontradas)
+        return frases_encontradas
+#     try:
+#         # Carregar apenas a terceira coluna
+#         df = pd.read_csv(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\eng_sentences.tsv', sep="\t", names=['frase'], usecols=[2], dtype=str)
+#     except FileNotFoundError:
+#         return None
+#     try:
+#         # Filtrar frases que contêm a palavra desejada (ignorando maiúsculas/minúsculas)
+#         resultado = df[df['frase'].str.contains(f' {palavra} ', case=False, na=False)]
+#
+#         lista_frases = resultado.sample(10)['frase'].tolist()
+#
+#         # Exibir algumas frases encontradas
+#         print(lista_frases)
+#
+#         return lista_frases
+#     except Exception as e:
+#         return None
 
 
 def tradutor_de_palavras(palavra_a_traduzir):
@@ -69,7 +85,4 @@ class GerenciadorPlanilha:
 
 
 if __name__ == '__main__':
-    palavras = ['weather', 'pineapple', 'keyboard', 'clip']
-
-    for palavra in palavras:
-        print(tradutor_de_palavras(palavra))
+    buscador_de_frases('weather')
