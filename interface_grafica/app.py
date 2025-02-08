@@ -211,6 +211,7 @@ class JanelaExibicaoFrases(CTkToplevel):
                 continue
 
             self.aba_palavra = self.gerenciador_abas.add(palavra)
+            self.aba_palavra.grid_columnconfigure(0, weight=1)
 
             # Mapeia a palavra à sua StringVar, ou seja, associa cada palavra à sua StringVar
             # para armazenar a frase selecionada pelo usuário.

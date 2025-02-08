@@ -64,7 +64,7 @@ def automatizar_anki(arquivo):
         sleep(1.5)
         # Colocar áudio
         pg.hotkey('ctrl', 'enter')
-        sleep(1.5)
+        sleep(2.5)
         # Pular para a linha de baixo
         pg.press('tab')
         sleep(1.5)

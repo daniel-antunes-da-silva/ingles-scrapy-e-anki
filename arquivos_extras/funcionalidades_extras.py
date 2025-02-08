@@ -13,12 +13,13 @@ def buscador_de_frases(palavra, contador_offset):
         cursor = conexao.cursor()
         cursor.execute('''
         SELECT texto
-        FROM frases
-        WHERE texto LIKE ?
+        FROM frases_fts
+        WHERE texto MATCH ?
         LIMIT 10
         OFFSET ?
-        ''', (f'%{palavra}%', contador_offset))
+        ''', (palavra, contador_offset))
         resultado_frases = cursor.fetchmany(10)
+
         frases_encontradas = []
         for frase in resultado_frases:
             frases_encontradas.append(frase[0])
