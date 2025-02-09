@@ -125,15 +125,16 @@ class FrameTraducao(CTkFrame):
         self.texto_informativo.configure(text='')
 
         # Manipulação de strings
-        palavras_digitadas = self.campo_palavras.get().replace(' ', '').split(',')
+        palavras_digitadas = self.campo_palavras.get().split(',')
         # List comprehension - Nesse caso, serve para adicionar cada palavra que não
         # for um espaço vazio dentro da lista self.palavras_formatadas.
         self.palavras_formatadas = []
         for palavra in palavras_digitadas:
+            palavra = palavra.strip()
             # Essa verificação é feita para garantir que a palavra tenha um valor e que seja
             # alfa (apenas letras) ou que tenha hífen.
             # Uma opção mais segura seria usar regex, mas acredito que não tenha problema.
-            if palavra != '' and (palavra.isalpha() or "-" in palavra or "'" in palavra):
+            if palavra != '' and (palavra.isalpha() or "-" in palavra or "'" in palavra or ' ' in palavra):
                 self.palavras_formatadas.append(palavra)
         print(f'Palavras formatadas após o loop = {self.palavras_formatadas}')
         if not self.palavras_formatadas:
@@ -217,7 +218,7 @@ class JanelaExibicaoFrases(CTkToplevel):
             frases_a_exibir = buscador_de_frases(palavra, self.contador)
             if not frases_a_exibir:
                 CTkLabel(self, text=f'Palavra "{palavra}" não encontrada. Verifique a grafia.',
-                         text_color='yellow').grid(row=i, column=0, padx=5, pady=5)
+                         text_color='yellow').grid(row=i, column=0, padx=5, pady=10)
                 continue
 
             self.aba_palavra = self.gerenciador_abas.add(palavra)
@@ -233,7 +234,7 @@ class JanelaExibicaoFrases(CTkToplevel):
                 frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
                 CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra], value=frase,
                                command=self.verificar_selecao).grid(
-                    row=indice, column=0, padx=10, pady=10, sticky='w')
+                    row=indice, column=0, padx=10, pady=15, sticky='w')
             botao_gerar = CTkButton(self.aba_palavra, text='Gerar mais', command=self.gerar_frases)
             botao_gerar.grid(row=12, column=0, padx=10, pady=10)
 
@@ -258,7 +259,7 @@ class JanelaExibicaoFrases(CTkToplevel):
             frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
             CTkRadioButton(aba_atual, text=frase_formatada, variable=self.var_frases[palavra],
                            value=frase, command=self.verificar_selecao).grid(
-                row=indice, column=0, padx=10, pady=10, sticky='w')
+                row=indice, column=0, padx=10, pady=15, sticky='w')
 
     def verificar_selecao(self):
         valores_selecionados = []

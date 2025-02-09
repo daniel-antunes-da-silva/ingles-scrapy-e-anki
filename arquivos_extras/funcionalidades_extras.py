@@ -9,22 +9,27 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 
 def buscador_de_frases(palavra, contador_offset):
-    with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
-        cursor = conexao.cursor()
-        cursor.execute('''
-        SELECT texto
-        FROM frases_fts
-        WHERE texto MATCH ?
-        LIMIT 10
-        OFFSET ?
-        ''', (palavra, contador_offset))
-        resultado_frases = cursor.fetchmany(10)
+    try:
+        with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
+            cursor = conexao.cursor()
+            cursor.execute('''
+            SELECT texto
+            FROM frases_fts
+            WHERE texto MATCH ?
+            LIMIT 10
+            OFFSET ?
+            ''', (palavra, contador_offset))
+            resultado_frases = cursor.fetchmany(10)
 
-        frases_encontradas = []
-        for frase in resultado_frases:
-            frases_encontradas.append(frase[0])
-        print(frases_encontradas)
-        return frases_encontradas
+            frases_encontradas = []
+            for frase in resultado_frases:
+                frases_encontradas.append(frase[0])
+            print(frases_encontradas)
+            return frases_encontradas
+    except sqlite3.Error as e:
+        print(e)
+    except Exception as error:
+        print(error)
 
 
 def tradutor_de_palavras(palavra_a_traduzir):
