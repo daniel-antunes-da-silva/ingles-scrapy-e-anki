@@ -24,7 +24,6 @@ def automatizar_anki(arquivo):
         if 'Anki' in titulo:
             titulo_anki = titulo
 
-
     janela_anki = pygetwindow.getWindowsWithTitle(titulo_anki)[0]
 
     if janela_anki.isMaximized:
