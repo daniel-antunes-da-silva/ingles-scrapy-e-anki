@@ -9,6 +9,7 @@ class JanelaIngles(CTk):
         super().__init__(*args, **kwargs)
 
         set_appearance_mode('dark')
+        # set_default_color_theme(r'..\arquivos_extras\tema.json')
 
         self.geometry('650x450')
         self.grid_columnconfigure(0, weight=1)
@@ -57,7 +58,6 @@ class FrameAnki(CTkFrame):
         self.grid_anchor('center')
 
         self.fonte_titulo = CTkFont(weight='bold', size=18)
-        self.fonte_padrao = CTkFont(size=15)
         texto_titulo = 'Para iniciar a automação do Anki sem erros, é importante seguir esses passos:'
         texto = '''
 1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções, no formato correto.
@@ -77,17 +77,17 @@ class FrameAnki(CTkFrame):
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20)
 
     def selecionar_arquivo(self):
-        self.caminho_arquivo = filedialog.askopenfilename(
+        caminho_arquivo = filedialog.askopenfilename(
             title='Selecionar arquivo',
             filetypes=[('Arquivo de planilha', '*.xlsx')]
         )
-        if self.caminho_arquivo:
-            self.campo_arquivo.insert(0, self.caminho_arquivo)
+        if caminho_arquivo:
+            self.campo_arquivo.insert(0, caminho_arquivo)
 
     def iniciar_thread_anki(self):
         def iniciar_automacao_anki():
             self.botao_iniciar.configure(state='disabled')
-            automatizar_anki(self.caminho_arquivo)
+            automatizar_anki(self.campo_arquivo.get())
             self.botao_iniciar.configure(state='normal')
 
         thread_anki = Thread(target=iniciar_automacao_anki, daemon=True)
@@ -100,16 +100,20 @@ class FrameTraducao(CTkFrame):
 
         self.janela_principal = janela_principal
         self.fonte_titulo = CTkFont(weight='bold', size=18)
-        self.fonte_padrao = CTkFont(size=15)
+        self.configuracoes_titulo = {
+            'font': self.fonte_titulo,
+            'text_color': '#48B3FF'
+        }
+
         self.palavras_formatadas = None
         self.grid_anchor('center')
 
-        self.texto_palavras = CTkLabel(self, text='Digite palavras em inglês, separadas por vírgula.', font=self.fonte_titulo)
+        self.texto_palavras = CTkLabel(self, text='Digite palavras em inglês, separadas por vírgula.', **self.configuracoes_titulo)
         self.texto_palavras.grid(row=0, column=0, padx=10, pady=(10, 0), sticky='w', columnspan=2)
-        self.texto_exemplo = CTkLabel(self, text='Ex: window, table, wall', font=self.fonte_padrao)
+        self.texto_exemplo = CTkLabel(self, text='Ex: window, table, wall')
         self.texto_exemplo.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='w', columnspan=2)
 
-        self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', height=34, font=self.fonte_padrao)
+        self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', height=34)
         self.campo_palavras.grid(row=2, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
 
         self.texto_informativo = CTkLabel(self, text='')
@@ -118,7 +122,7 @@ class FrameTraducao(CTkFrame):
         self.botao_avancar = CTkButton(self, text='Avançar', command=self.iniciar_thread_avancar)
         self.botao_avancar.grid(row=4, column=0, padx=10, pady=10, sticky='ew')
         self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
-        self.botao_voltar.grid(row=4, column=1, padx=10, pady=10)
+        self.botao_voltar.grid(row=4, column=1, padx=10, pady=10, sticky='ew')
 
     def avancar_etapa(self):
         self.botao_avancar.configure(state='disabled')
@@ -140,12 +144,13 @@ class FrameTraducao(CTkFrame):
         if not self.palavras_formatadas:
             self.texto_informativo.configure(text='Corrija as palavras digitadas.', text_color='yellow')
         else:
-            try:
-                JanelaExibicaoFrases(self.palavras_formatadas)
-            except:
-                self.texto_informativo.configure(
-                    text=f'Ocorreu algum erro durante a busca. Tente novamente!',
-                    wraplength=300)
+            JanelaExibicaoFrases(self.palavras_formatadas)
+            # try:
+            #     JanelaExibicaoFrases(self.palavras_formatadas)
+            # except:
+            #     self.texto_informativo.configure(
+            #         text=f'Ocorreu algum erro durante a busca. Tente novamente!',
+            #         wraplength=300)
 
         self.botao_avancar.configure(state='normal')
 
@@ -190,6 +195,10 @@ class JanelaExibicaoFrases(CTkToplevel):
         # Cria uma variável StringVar para armazenar a frase selecionada pelo usuário.
         # Essa variável será compartilhada entre todos os radiobuttons da aba atual.
         self.var_frases = {}
+
+        # Iniciando Thread que traduz as palavras digitadas
+        thread_traducao = Thread(target=self.traduzir_palavras, daemon=True)
+        thread_traducao.start()
 
         # Chamando a função que cria as abas e radiobuttons
         self.criar_abas_e_radiobuttons(palavras)
@@ -268,13 +277,16 @@ class JanelaExibicaoFrases(CTkToplevel):
         if all(valores_selecionados):
             self.botao_salvar.configure(state='normal')
 
+    def traduzir_palavras(self):
+        self.significados_palavra = tradutor_de_palavras(self.palavras_formatadas)
+
     def salvar_dados(self):
         planilha = GerenciadorPlanilha()
         for palavra, var_frase in self.var_frases.items():
-            significados_palavra = tradutor_de_palavras(palavra)
-            significados_palavra = ', '.join(significados_palavra)
+            significados = self.significados_palavra[palavra]
+            significados = ', '.join(significados)
             frase_selecionada = var_frase.get()
-            planilha.adicionar_dados(frase_selecionada, palavra, significados_palavra)
+            planilha.adicionar_dados(frase_selecionada, palavra, significados)
             print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
 
         planilha.salvar_planilha()

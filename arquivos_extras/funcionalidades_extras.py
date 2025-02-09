@@ -32,18 +32,20 @@ def buscador_de_frases(palavra, contador_offset):
         print(error)
 
 
-def tradutor_de_palavras(palavra_a_traduzir):
+def tradutor_de_palavras(palavras_a_traduzir: list):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
     }
-
-    url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra_a_traduzir}'
-    resposta = requests.get(url, headers=headers).text
-    # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
-    padrao_palavras = r'<span class="display-term">(.*?)</span>'
-    palavras = re.findall(padrao_palavras, resposta)[:4]
-
-    return palavras
+    palavras_traduzidas = {}
+    for palavra in palavras_a_traduzir:
+        url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra}'
+        resposta = requests.get(url, headers=headers).text
+        # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
+        padrao_palavras = r'<span class="display-term">(.*?)</span>'
+        palavras = re.findall(padrao_palavras, resposta)[:4]
+        palavras_traduzidas[palavra] = palavras
+    print(palavras_traduzidas)
+    return palavras_traduzidas
 
 
 class GerenciadorPlanilha:
@@ -75,4 +77,4 @@ class GerenciadorPlanilha:
 
 
 if __name__ == '__main__':
-    buscador_de_frases('weather')
+    tradutor_de_palavras(['weather', 'join'])
