@@ -1,7 +1,10 @@
 from threading import Thread
+
+import openpyxl.utils.exceptions
 from customtkinter import *
 from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
 from arquivos_extras.anki_automation import automatizar_anki
+from tkinter import messagebox
 
 
 class JanelaIngles(CTk):
@@ -11,13 +14,15 @@ class JanelaIngles(CTk):
         set_appearance_mode('dark')
         set_default_color_theme(r'..\arquivos_extras\tema.json')
 
-        self.geometry('650x450')
+        self.geometry('750x500')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.configure(padx=20, pady=20)
+        self.configure(padx=40, pady=40)
+        self.iconbitmap(r'..\imagens\icone_programa.ico')
+
         self.title('Escolher funcionalidade')
 
-        self.frame_inicial = FrameEscolhaInicial(master=self, janela_principal=self, fg_color='transparent')
+        self.frame_inicial = FrameEscolhaInicial(master=self, janela_principal=self)
         self.frame_inicial.grid(row=0, column=0, sticky='nsew')
 
         self.frame_traducao = FrameTraducao(master=self, janela_principal=self)
@@ -54,41 +59,56 @@ class FrameEscolhaInicial(CTkFrame):
 class FrameAnki(CTkFrame):
     def __init__(self, janela_principal, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
+
+        self.fonte_titulo = CTkFont(weight='bold', size=20)
+        self.configuracoes_titulo = {
+            'font': self.fonte_titulo,
+            'text_color': 'white',
+            'height': 60
+        }
+
         self.janela_principal = janela_principal
         self.grid_anchor('center')
 
-        self.fonte_titulo = CTkFont(weight='bold', size=18)
         texto_titulo = 'Para iniciar a automação do Anki sem erros, é importante seguir esses passos:'
         texto = '''
 1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções, no formato correto.
 2º - Abra o Anki e deixe selecionado o baralho (deck) que deseja inserir as frases e traduções.
 3º - Clique em iniciar e clique na janela do Anki para mantê-la selecionada'''
-        CTkLabel(self, text=texto_titulo, font=self.fonte_titulo, justify='left', wraplength=600).grid(
+        CTkLabel(self, text=texto_titulo, justify='left', wraplength=600, **self.configuracoes_titulo).grid(
             row=0, column=0, padx=10, columnspan=2)
         CTkLabel(self, text=texto, justify='left', wraplength=550).grid(
             row=1, column=0, padx=10, pady=(0, 20), columnspan=2)
-        self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330)
+        self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330, height=34)
         self.campo_arquivo.grid(row=2, column=0, padx=10, pady=10, sticky='ew')
-        self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo)
-        self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10)
-        self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.iniciar_thread_anki)
+        self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo, height=34)
+        self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10, sticky='ew')
+        self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.iniciar_thread_anki, height=34,
+                                       width=200, font=CTkFont(weight='bold'))
         self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
-        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
-        self.botao_voltar.grid(row=3, column=1, padx=10, pady=20)
+        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial, height=34)
+        self.botao_voltar.grid(row=3, column=1, padx=10, pady=20, sticky='ew')
 
     def selecionar_arquivo(self):
         caminho_arquivo = filedialog.askopenfilename(
             title='Selecionar arquivo',
-            filetypes=[('Arquivo de planilha', '*.xlsx')]
+            filetypes=[('Arquivo de planilha', '*.xlsx')],
+            initialfile='Planilha Anki',
+            defaultextension='.xlsx'
         )
         if caminho_arquivo:
             self.campo_arquivo.insert(0, caminho_arquivo)
 
     def iniciar_thread_anki(self):
         def iniciar_automacao_anki():
-            self.botao_iniciar.configure(state='disabled')
-            automatizar_anki(self.campo_arquivo.get())
-            self.botao_iniciar.configure(state='normal')
+            try:
+                self.botao_iniciar.configure(state='disabled')
+                automatizar_anki(self.campo_arquivo.get())
+            except openpyxl.utils.exceptions.InvalidFileException:
+                messagebox.showwarning(title='Atenção!',
+                                       message='Arquivo inválido ou vazio.')
+            finally:
+                self.botao_iniciar.configure(state='normal')
 
         thread_anki = Thread(target=iniciar_automacao_anki, daemon=True)
         thread_anki.start()
@@ -99,10 +119,10 @@ class FrameTraducao(CTkFrame):
         super().__init__(master, *args, **kwargs)
 
         self.janela_principal = janela_principal
-        self.fonte_titulo = CTkFont(weight='bold', size=18)
+        self.fonte_titulo = CTkFont(weight='bold', size=20)
         self.configuracoes_titulo = {
             'font': self.fonte_titulo,
-            'text_color': '#48B3FF'
+            'text_color': '#51EDFF'
         }
 
         self.palavras_formatadas = None
@@ -166,10 +186,10 @@ class JanelaExibicaoFrases(CTkToplevel):
     def __init__(self, palavras, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fonte_titulo = CTkFont(weight='bold', size=18)
+        self.fonte_titulo = CTkFont(weight='bold', size=20)
         self.configuracoes_titulo = {
             'font': self.fonte_titulo,
-            'text_color': '#48B3FF'
+            'text_color': '#51EDFF'
         }
 
         self.palavras_formatadas = palavras
@@ -189,8 +209,6 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
         self.gerenciador_abas = CTkTabview(self, segmented_button_fg_color='#B55641')
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
-
-        self.gerenciador_abas.configure(width=200)
 
         self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
         self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
@@ -267,7 +285,8 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         # Recria os radiobuttons com as novas frases
         for indice, frase in enumerate(novas_frases, start=2):
-            # Apenas exibe a frase formatada, mas não será o valor associado a ela, e sim a frase sem formatação (sem quebra de linha).
+            # Apenas exibe a frase formatada, mas não será o valor associado a ela,
+            # e sim a frase sem formatação (sem quebra de linha).
             frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
             CTkRadioButton(aba_atual, text=frase_formatada, variable=self.var_frases[palavra],
                            value=frase, command=self.verificar_selecao).grid(

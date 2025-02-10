@@ -6,6 +6,7 @@ import os
 import sqlite3
 from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
+from tkinter import messagebox
 
 
 def buscador_de_frases(palavra, contador_offset):
@@ -64,16 +65,15 @@ class GerenciadorPlanilha:
             defaultextension='.xlsx',
             confirmoverwrite=True
         )
-        self.planilha.save(caminho)
 
-        if caminho:
-            try:
-                self.planilha.save(caminho)
-                print(f"Planilha salva com sucesso em: {caminho}")
-            except Exception as e:
-                print(f"Erro ao salvar a planilha: {e}")
-        else:
-            print("Salvamento cancelado pelo usuário.")
+        try:
+            self.planilha.save(caminho)
+            print(f"Planilha salva com sucesso em: {caminho}")
+        except FileNotFoundError:
+            messagebox.showwarning(title='Ops', message='Caminho inválido ou operação cancelada.')
+        except Exception as e:
+            print(f"Erro ao salvar a planilha: {e}")
+
 
 
 if __name__ == '__main__':
