@@ -1,10 +1,10 @@
 from threading import Thread
-
 import openpyxl.utils.exceptions
 from customtkinter import *
 from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
 from arquivos_extras.anki_automation import automatizar_anki
 from tkinter import messagebox
+from PIL import Image
 
 
 class JanelaIngles(CTk):
@@ -48,12 +48,19 @@ class FrameEscolhaInicial(CTkFrame):
         self.janela_principal = janela_principal
         self.grid_anchor('center')
 
-        self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200, height=34,
-                                                   command=janela_principal.exibir_frame_traducao)
-        self.btn_iniciar_janela_buscas.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+        imagem_busca = CTkImage(dark_image=Image.open(r'..\imagens\imagem_busca.png'), size=(200, 200))
+        # self.imagem_busca = CTkLabel(self, text='', image=imagem_busca)
+        # self.imagem_busca.grid(row=0, column=0, sticky='nsew')
+
+        # self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200, height=34,
+        #                                            command=janela_principal.exibir_frame_traducao, image=imagem_busca)
+        self.btn_iniciar_janela_buscas = CTkButton(self, text='',
+                                                   command=janela_principal.exibir_frame_traducao, image=imagem_busca,
+                                                   fg_color='transparent')
+        self.btn_iniciar_janela_buscas.grid(row=1, column=0, padx=40, pady=10, sticky='nsew')
         self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200, height=34,
                                                command=janela_principal.exibir_frame_anki)
-        self.btn_iniciar_automacao.grid(row=0, column=1, padx=10, pady=10, sticky='nsew')
+        self.btn_iniciar_automacao.grid(row=1, column=1, padx=10, pady=10, sticky='nsew')
 
 
 class FrameAnki(CTkFrame):
