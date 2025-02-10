@@ -9,7 +9,7 @@ class JanelaIngles(CTk):
         super().__init__(*args, **kwargs)
 
         set_appearance_mode('dark')
-        # set_default_color_theme(r'..\arquivos_extras\tema.json')
+        set_default_color_theme(r'..\arquivos_extras\tema.json')
 
         self.geometry('650x450')
         self.grid_columnconfigure(0, weight=1)
@@ -43,10 +43,10 @@ class FrameEscolhaInicial(CTkFrame):
         self.janela_principal = janela_principal
         self.grid_anchor('center')
 
-        self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200,
+        self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200, height=34,
                                                    command=janela_principal.exibir_frame_traducao)
         self.btn_iniciar_janela_buscas.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
-        self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200,
+        self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200, height=34,
                                                command=janela_principal.exibir_frame_anki)
         self.btn_iniciar_automacao.grid(row=0, column=1, padx=10, pady=10, sticky='nsew')
 
@@ -119,9 +119,9 @@ class FrameTraducao(CTkFrame):
         self.texto_informativo = CTkLabel(self, text='')
         self.texto_informativo.grid(row=3, column=0, padx=10, columnspan=2)
 
-        self.botao_avancar = CTkButton(self, text='Avançar', command=self.iniciar_thread_avancar)
+        self.botao_avancar = CTkButton(self, text='Avançar', height=34, command=self.iniciar_thread_avancar)
         self.botao_avancar.grid(row=4, column=0, padx=10, pady=10, sticky='ew')
-        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial)
+        self.botao_voltar = CTkButton(self, text='< Voltar', height=34, command=self.janela_principal.exibir_frame_inicial)
         self.botao_voltar.grid(row=4, column=1, padx=10, pady=10, sticky='ew')
 
     def avancar_etapa(self):
@@ -166,8 +166,11 @@ class JanelaExibicaoFrases(CTkToplevel):
     def __init__(self, palavras, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Tentativa de usar um Popup personalizado, mas as tentativas de centralizar não funcionaram muito bem.
-        # janela_carregamento = PopupCarregamento(self)
+        self.fonte_titulo = CTkFont(weight='bold', size=18)
+        self.configuracoes_titulo = {
+            'font': self.fonte_titulo,
+            'text_color': '#48B3FF'
+        }
 
         self.palavras_formatadas = palavras
         print(f'Palavras formatadas dentro da classe: {palavras}')
@@ -182,9 +185,9 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         self.contador = 0
 
-        self.texto_frases = CTkLabel(self, text='Exemplos de frases')
+        self.texto_frases = CTkLabel(self, text='Exemplos de frases', **self.configuracoes_titulo)
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
-        self.gerenciador_abas = CTkTabview(self)
+        self.gerenciador_abas = CTkTabview(self, segmented_button_fg_color='#B55641')
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
 
         self.gerenciador_abas.configure(width=200)
