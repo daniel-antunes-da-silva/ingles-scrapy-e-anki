@@ -1,12 +1,11 @@
-import pandas as pd
 import requests
 import re
 import openpyxl
-import os
 import sqlite3
 from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 from tkinter import messagebox
+from gtts import gTTS
 
 
 def buscador_de_frases(palavra, contador_offset):
@@ -74,6 +73,49 @@ class GerenciadorPlanilha:
         except Exception as e:
             print(f"Erro ao salvar a planilha: {e}")
 
+
+def gerar_audio(texto, palavra):
+    tts = gTTS(texto, lang='en')
+
+    # Nome do arquivo de áudio
+    nome_arquivo = rf"..\audios_temporarios\{palavra}.mp3"
+
+    # Salvar o áudio no arquivo
+    tts.save(nome_arquivo)
+
+
+def adicionar_cartao(baralho, frase, significado_palavra, palavra):
+    palavra_escapada = re.escape(palavra)  # Protege caracteres especiais
+    # Regex para permitir espaços, e destacar a expressão ou palavra, preservando a formatação
+    frase_formatada = re.sub(rf'(?<!\w)({palavra_escapada})(?!\w)', r'<b>\1</b>', frase, flags=re.IGNORECASE)
+
+    requisicao = {
+        "action": "addNote",
+        "version": 6,
+        "params": {
+            "note": {
+                "deckName": f"{baralho}",
+                "modelName": "Básico",
+                "fields": {
+                    "Frente": f"{frase_formatada}",
+                    "Verso": f"{significado_palavra}"
+                },
+                "audio": [{
+                    "url": f"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q={frase.replace(' ', '+')}",
+                    "filename": f"{palavra}.mp3",
+                    "fields": [
+                        "Frente"
+                    ]
+                }],
+                "options": {
+                    "allowDuplicate": True
+                }
+                }
+        }
+    }
+
+    resposta = requests.post(url='http://127.0.0.1:8765', json=requisicao)
+    print(resposta.json())
 
 
 if __name__ == '__main__':

@@ -49,11 +49,7 @@ class FrameEscolhaInicial(CTkFrame):
         self.grid_anchor('center')
 
         imagem_busca = CTkImage(dark_image=Image.open(r'..\imagens\imagem_busca.png'), size=(200, 200))
-        # self.imagem_busca = CTkLabel(self, text='', image=imagem_busca)
-        # self.imagem_busca.grid(row=0, column=0, sticky='nsew')
 
-        # self.btn_iniciar_janela_buscas = CTkButton(self, text='Iniciar janela de buscas', width=200, height=34,
-        #                                            command=janela_principal.exibir_frame_traducao, image=imagem_busca)
         self.btn_iniciar_janela_buscas = CTkButton(self, text='',
                                                    command=janela_principal.exibir_frame_traducao, image=imagem_busca,
                                                    fg_color='transparent')
@@ -79,8 +75,8 @@ class FrameAnki(CTkFrame):
 
         texto_titulo = 'Para iniciar a automação do Anki sem erros, é importante seguir esses passos:'
         texto = '''
-1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções, no formato correto.
-2º - Abra o Anki e deixe selecionado o baralho (deck) que deseja inserir as frases e traduções.
+1º - Abra o Anki e veja o nome do baralho que vai inserir.
+1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções.
 3º - Clique em iniciar e clique na janela do Anki para mantê-la selecionada'''
         CTkLabel(self, text=texto_titulo, justify='left', wraplength=600, **self.configuracoes_titulo).grid(
             row=0, column=0, padx=10, columnspan=2)
@@ -110,7 +106,10 @@ class FrameAnki(CTkFrame):
         def iniciar_automacao_anki():
             try:
                 self.botao_iniciar.configure(state='disabled')
-                automatizar_anki(self.campo_arquivo.get())
+                pergunta_baralho = CTkInputDialog(title='Definir baralho', text='Escreva o nome do baralho que deseja automatizar, exatamente com o mesmo nome.')
+                resposta_baralho = pergunta_baralho.get_input()
+                arquivo = self.campo_arquivo.get()
+                automatizar_anki(arquivo, resposta_baralho)
             except openpyxl.utils.exceptions.InvalidFileException:
                 messagebox.showwarning(title='Atenção!',
                                        message='Arquivo inválido ou vazio.')
