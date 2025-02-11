@@ -113,10 +113,28 @@ def adicionar_cartao(baralho, frase, significado_palavra, palavra):
                 }
         }
     }
+    try:
+        resposta = requests.post(url='http://127.0.0.1:8765', json=requisicao)
+        print(resposta.json())
+    except requests.exceptions.ConnectionError:
+        messagebox.showerror(title='Erro de conexão com o Anki',
+                             message='Verifique se o Anki está aberto e verifique sua conexão com a internet.')
+    else:
+        return resposta.json()
 
-    resposta = requests.post(url='http://127.0.0.1:8765', json=requisicao)
-    print(resposta.json())
-
+def pegar_baralhos():
+    requisicao = {
+        "action": "deckNames",
+        "version": 6
+    }
+    try:
+        resposta = requests.get(url='http://127.0.0.1:8765', json=requisicao)
+        print(resposta.json()['result'])
+    except requests.exceptions.ConnectionError:
+        messagebox.showerror(title='Erro de conexão com o Anki',
+                             message='Verifique se o Anki está aberto e verifique sua conexão com a internet.')
+    else:
+        return resposta.json()['result']
 
 if __name__ == '__main__':
-    tradutor_de_palavras(['weather', 'join'])
+    pegar_baralhos()

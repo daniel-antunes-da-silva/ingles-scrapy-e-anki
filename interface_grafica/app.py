@@ -1,7 +1,7 @@
 from threading import Thread
 import openpyxl.utils.exceptions
 from customtkinter import *
-from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha
+from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha, pegar_baralhos
 from arquivos_extras.anki_automation import automatizar_anki
 from tkinter import messagebox
 from PIL import Image
@@ -49,12 +49,13 @@ class FrameEscolhaInicial(CTkFrame):
         self.grid_anchor('center')
 
         imagem_busca = CTkImage(dark_image=Image.open(r'..\imagens\imagem_busca.png'), size=(200, 200))
+        imagem_automacao_anki = CTkImage(dark_image=Image.open(r'..\imagens\imagem_automacao_anki.png'),
+                                         size=(200, 200))
 
-        self.btn_iniciar_janela_buscas = CTkButton(self, text='',
-                                                   command=janela_principal.exibir_frame_traducao, image=imagem_busca,
-                                                   fg_color='transparent')
+        self.btn_iniciar_janela_buscas = CTkButton(self, text='', image=imagem_busca, fg_color='transparent',
+                                                   command=janela_principal.exibir_frame_traducao)
         self.btn_iniciar_janela_buscas.grid(row=1, column=0, padx=40, pady=10, sticky='nsew')
-        self.btn_iniciar_automacao = CTkButton(self, text='Iniciar automação Anki', width=200, height=34,
+        self.btn_iniciar_automacao = CTkButton(self, text='', image=imagem_automacao_anki, fg_color='transparent',
                                                command=janela_principal.exibir_frame_anki)
         self.btn_iniciar_automacao.grid(row=1, column=1, padx=10, pady=10, sticky='nsew')
 
@@ -86,11 +87,14 @@ class FrameAnki(CTkFrame):
         self.campo_arquivo.grid(row=2, column=0, padx=10, pady=10, sticky='ew')
         self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo, height=34)
         self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10, sticky='ew')
-        self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.iniciar_thread_anki, height=34,
+        self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.abrir_janela_deck, height=34,
                                        width=200, font=CTkFont(weight='bold'))
         self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
         self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial, height=34)
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20, sticky='ew')
+
+    def abrir_janela_deck(self):
+        JanelaEscolhaBaralho(self)
 
     def selecionar_arquivo(self):
         caminho_arquivo = filedialog.askopenfilename(
@@ -102,14 +106,12 @@ class FrameAnki(CTkFrame):
         if caminho_arquivo:
             self.campo_arquivo.insert(0, caminho_arquivo)
 
-    def iniciar_thread_anki(self):
+    def iniciar_thread_anki(self, baralho):
         def iniciar_automacao_anki():
             try:
                 self.botao_iniciar.configure(state='disabled')
-                pergunta_baralho = CTkInputDialog(title='Definir baralho', text='Escreva o nome do baralho que deseja automatizar, exatamente com o mesmo nome.')
-                resposta_baralho = pergunta_baralho.get_input()
                 arquivo = self.campo_arquivo.get()
-                automatizar_anki(arquivo, resposta_baralho)
+                automatizar_anki(arquivo=arquivo, baralho=baralho)
             except openpyxl.utils.exceptions.InvalidFileException:
                 messagebox.showwarning(title='Atenção!',
                                        message='Arquivo inválido ou vazio.')
@@ -213,8 +215,9 @@ class JanelaExibicaoFrases(CTkToplevel):
 
         self.texto_frases = CTkLabel(self, text='Exemplos de frases', **self.configuracoes_titulo)
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
-        self.gerenciador_abas = CTkTabview(self, segmented_button_fg_color='#B55641')
+        self.gerenciador_abas = CTkTabview(self, fg_color='gray13')
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
+        self.gerenciador_abas._segmented_button.configure(font=("Arial", 18, "bold"))
 
         self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
         self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
@@ -318,6 +321,47 @@ class JanelaExibicaoFrases(CTkToplevel):
             print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
 
         planilha.salvar_planilha()
+
+
+class JanelaEscolhaBaralho(CTkToplevel):
+    def __init__(self, frame, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.withdraw()
+        self.frame_anki = frame
+        self.title('Escolha o Deck')
+        self.geometry('350x300')
+        self.configure(padx=20, pady=20)
+        self.grid_anchor('center')
+        self.focus_force()
+        self.grab_set()
+
+        self.fonte_titulo = CTkFont(weight='bold', size=20)
+        self.configuracoes_titulo = {
+            'font': self.fonte_titulo,
+            'text_color': '#51EDFF'
+        }
+
+        CTkLabel(self, text='Selecione o deck desejado: ',
+                 **self.configuracoes_titulo).grid(row=0, column=0, padx=10, pady=10, sticky='w')
+
+        self.variavel_deck = StringVar()
+        baralhos = pegar_baralhos()
+        if baralhos:
+            self.deiconify()
+            for indice, baralho in enumerate(baralhos, start=1):
+                CTkRadioButton(self, text=baralho, command=self.iniciar_automacao_e_fechar_janela,
+                               variable=self.variavel_deck, value=baralho).grid(row=indice, column=0, padx=10, pady=5, sticky='w')
+        else:
+            self.destroy()
+
+    def iniciar_automacao_e_fechar_janela(self):
+        self.destroy()
+        self.frame_anki.iniciar_thread_anki(self.pegar_baralho_selecionado())
+
+    def pegar_baralho_selecionado(self):
+        baralho_selecionado = self.variavel_deck.get()
+        return baralho_selecionado
 
 
 app = JanelaIngles()

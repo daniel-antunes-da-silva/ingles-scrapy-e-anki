@@ -23,7 +23,10 @@ def automatizar_anki(arquivo, baralho):
         traducao = linha[2].value
         traducao_palavra = f'{palavra} = {traducao}'
 
-        adicionar_cartao(baralho=baralho, frase=frase, significado_palavra=traducao_palavra, palavra=palavra)
+        resultado_requisicao = adicionar_cartao(baralho=baralho, frase=frase, significado_palavra=traducao_palavra, palavra=palavra)
+        if resultado_requisicao['error'] != None:
+            print(resultado_requisicao['error'])
+            return
 
         qtd_frases += 1
     messagebox.showinfo(title='Finalizado!', message=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
