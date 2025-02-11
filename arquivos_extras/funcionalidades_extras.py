@@ -1,44 +1,51 @@
-import pandas as pd
 import requests
 import re
 import openpyxl
-import os
 import sqlite3
 from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
+from tkinter import messagebox
+from gtts import gTTS
 
 
 def buscador_de_frases(palavra, contador_offset):
-    with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
-        cursor = conexao.cursor()
-        cursor.execute('''
-        SELECT texto
-        FROM frases_fts
-        WHERE texto MATCH ?
-        LIMIT 10
-        OFFSET ?
-        ''', (palavra, contador_offset))
-        resultado_frases = cursor.fetchmany(10)
+    try:
+        with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
+            cursor = conexao.cursor()
+            cursor.execute('''
+            SELECT texto
+            FROM frases_fts
+            WHERE texto MATCH ?
+            LIMIT 10
+            OFFSET ?
+            ''', (palavra, contador_offset))
+            resultado_frases = cursor.fetchmany(10)
 
-        frases_encontradas = []
-        for frase in resultado_frases:
-            frases_encontradas.append(frase[0])
-        print(frases_encontradas)
-        return frases_encontradas
+            frases_encontradas = []
+            for frase in resultado_frases:
+                frases_encontradas.append(frase[0])
+            print(frases_encontradas)
+            return frases_encontradas
+    except sqlite3.Error as e:
+        print(e)
+    except Exception as error:
+        print(error)
 
 
-def tradutor_de_palavras(palavra_a_traduzir):
+def tradutor_de_palavras(palavras_a_traduzir: list):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
     }
-
-    url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra_a_traduzir}'
-    resposta = requests.get(url, headers=headers).text
-    # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
-    padrao_palavras = r'<span class="display-term">(.*?)</span>'
-    palavras = re.findall(padrao_palavras, resposta)[:4]
-
-    return palavras
+    palavras_traduzidas = {}
+    for palavra in palavras_a_traduzir:
+        url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra}'
+        resposta = requests.get(url, headers=headers).text
+        # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
+        padrao_palavras = r'<span class="display-term">(.*?)</span>'
+        palavras = re.findall(padrao_palavras, resposta)[:4]
+        palavras_traduzidas[palavra] = palavras
+    print(palavras_traduzidas)
+    return palavras_traduzidas
 
 
 class GerenciadorPlanilha:
@@ -57,17 +64,59 @@ class GerenciadorPlanilha:
             defaultextension='.xlsx',
             confirmoverwrite=True
         )
-        self.planilha.save(caminho)
 
-        if caminho:
-            try:
-                self.planilha.save(caminho)
-                print(f"Planilha salva com sucesso em: {caminho}")
-            except Exception as e:
-                print(f"Erro ao salvar a planilha: {e}")
-        else:
-            print("Salvamento cancelado pelo usuário.")
+        try:
+            self.planilha.save(caminho)
+            print(f"Planilha salva com sucesso em: {caminho}")
+        except FileNotFoundError:
+            messagebox.showwarning(title='Ops', message='Caminho inválido ou operação cancelada.')
+        except Exception as e:
+            print(f"Erro ao salvar a planilha: {e}")
+
+
+def gerar_audio(texto, palavra):
+    tts = gTTS(texto, lang='en')
+
+    # Nome do arquivo de áudio
+    nome_arquivo = rf"..\audios_temporarios\{palavra}.mp3"
+
+    # Salvar o áudio no arquivo
+    tts.save(nome_arquivo)
+
+
+def adicionar_cartao(baralho, frase, significado_palavra, palavra):
+    palavra_escapada = re.escape(palavra)  # Protege caracteres especiais
+    # Regex para permitir espaços, e destacar a expressão ou palavra, preservando a formatação
+    frase_formatada = re.sub(rf'(?<!\w)({palavra_escapada})(?!\w)', r'<b>\1</b>', frase, flags=re.IGNORECASE)
+
+    requisicao = {
+        "action": "addNote",
+        "version": 6,
+        "params": {
+            "note": {
+                "deckName": f"{baralho}",
+                "modelName": "Básico",
+                "fields": {
+                    "Frente": f"{frase_formatada}",
+                    "Verso": f"{significado_palavra}"
+                },
+                "audio": [{
+                    "url": f"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q={frase.replace(' ', '+')}",
+                    "filename": f"{palavra}.mp3",
+                    "fields": [
+                        "Frente"
+                    ]
+                }],
+                "options": {
+                    "allowDuplicate": True
+                }
+                }
+        }
+    }
+
+    resposta = requests.post(url='http://127.0.0.1:8765', json=requisicao)
+    print(resposta.json())
 
 
 if __name__ == '__main__':
-    buscador_de_frases('weather')
+    tradutor_de_palavras(['weather', 'join'])
