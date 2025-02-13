@@ -1,5 +1,4 @@
 from threading import Thread
-import openpyxl.utils.exceptions
 from customtkinter import *
 from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha, pegar_baralhos
 from arquivos_extras.funcionalidades_extras import automatizar_anki
@@ -14,10 +13,10 @@ class JanelaIngles(CTk):
         set_appearance_mode('dark')
         set_default_color_theme(r'..\arquivos_extras\tema.json')
 
-        self.geometry('750x500')
+        self.geometry('600x400')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.configure(padx=40, pady=40)
+        self.configure(padx=30, pady=30)
         self.iconbitmap(r'..\imagens\icone_programa.ico')
 
         self.title('Escolher funcionalidade')
@@ -83,7 +82,7 @@ class FrameAnki(CTkFrame):
             row=0, column=0, padx=10, columnspan=2, sticky='w')
         CTkLabel(self, text=texto, justify='left', wraplength=550).grid(
             row=1, column=0, padx=10, pady=(0, 20), columnspan=2)
-        self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330, height=34)
+        self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330, height=38)
         self.campo_arquivo.grid(row=2, column=0, padx=10, pady=10, sticky='ew')
         self.botao_selecionar = CTkButton(self, text='Selecionar arquivo', command=self.selecionar_arquivo, height=34)
         self.botao_selecionar.grid(row=2, column=1, padx=10, pady=10, sticky='ew')
@@ -94,6 +93,10 @@ class FrameAnki(CTkFrame):
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20, sticky='ew')
 
     def abrir_janela_deck(self):
+        if not self.campo_arquivo.get():
+            messagebox.showwarning(title='Atenção!',
+                                   message='Nenhum arquivo foi inserido.')
+            return
         JanelaEscolhaBaralho(self)
 
     def selecionar_arquivo(self):
@@ -108,15 +111,10 @@ class FrameAnki(CTkFrame):
 
     def iniciar_thread_anki(self, baralho):
         def iniciar_automacao_anki():
-            try:
-                self.botao_iniciar.configure(state='disabled')
-                arquivo = self.campo_arquivo.get()
-                automatizar_anki(arquivo=arquivo, baralho=baralho)
-            except openpyxl.utils.exceptions.InvalidFileException:
-                messagebox.showwarning(title='Atenção!',
-                                       message='Arquivo inválido ou vazio.')
-            finally:
-                self.botao_iniciar.configure(state='normal')
+            self.botao_iniciar.configure(state='disabled')
+            arquivo = self.campo_arquivo.get()
+            automatizar_anki(arquivo=arquivo, baralho=baralho)
+            self.botao_iniciar.configure(state='normal')
 
         thread_anki = Thread(target=iniciar_automacao_anki, daemon=True)
         thread_anki.start()
@@ -141,7 +139,7 @@ class FrameTraducao(CTkFrame):
         self.texto_exemplo = CTkLabel(self, text='Ex: window, table, wall')
         self.texto_exemplo.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='w', columnspan=2)
 
-        self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', height=34)
+        self.campo_palavras = CTkEntry(self, placeholder_text='Digite...', height=38)
         self.campo_palavras.grid(row=2, column=0, padx=10, pady=10, sticky='ew', columnspan=2)
 
         self.texto_informativo = CTkLabel(self, text='')
@@ -282,11 +280,21 @@ class JanelaExibicaoFrases(CTkToplevel):
     def gerar_frases(self):
         palavra = self.gerenciador_abas.get()
         aba_atual = self.gerenciador_abas.tab(palavra)
-        self.contador[palavra] += 10
+
+        if self.contador[palavra] is not None:
+            self.contador[palavra] += 10
+        else:
+            messagebox.showinfo(title='Poxa :(',
+                                message=f'Não há mais frases para "{palavra}".')
+            return
+
         print(f'Contador de {palavra} ao gerar mais frases: {self.contador[palavra]}')
         novas_frases = buscador_de_frases(palavra, self.contador[palavra])
 
         if not novas_frases:
+            self.contador[palavra] = None
+            messagebox.showinfo(title='Poxa :(',
+                                message=f'Não há mais frases para "{palavra}".')
             return
 
         # Remove os radiobuttons existentes

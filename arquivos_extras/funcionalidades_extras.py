@@ -6,11 +6,12 @@ from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 from tkinter import messagebox
 from gtts import gTTS
+from openpyxl.utils.exceptions import InvalidFileException
 
 
 def buscador_de_frases(palavra, contador_offset):
     try:
-        with sqlite3.connect(r'C:\Users\Daniel\Documents\Projetos Python\projeto_inglês\arquivos_extras\frases.db') as conexao:
+        with sqlite3.connect(r'..\arquivos_extras\frases.db') as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
             SELECT texto
@@ -74,16 +75,6 @@ class GerenciadorPlanilha:
             print(f"Erro ao salvar a planilha: {e}")
 
 
-def gerar_audio(texto, palavra):
-    tts = gTTS(texto, lang='en')
-
-    # Nome do arquivo de áudio
-    nome_arquivo = rf"..\audios_temporarios\{palavra}.mp3"
-
-    # Salvar o áudio no arquivo
-    tts.save(nome_arquivo)
-
-
 def adicionar_cartao(baralho, frase, significado_palavra, palavra):
     palavra_escapada = re.escape(palavra)  # Protege caracteres especiais
     # Regex para permitir espaços, e destacar a expressão ou palavra, preservando a formatação
@@ -130,6 +121,9 @@ def pegar_baralhos():
     try:
         resposta = requests.get(url='http://127.0.0.1:8765', json=requisicao)
         print(resposta.json()['result'])
+    except InvalidFileException:
+        messagebox.showwarning(title='Atenção!',
+                               message='Arquivo inválido ou vazio.')
     except requests.exceptions.ConnectionError:
         messagebox.showerror(title='Erro de conexão com o Anki',
                              message='Verifique se o Anki está aberto e verifique sua conexão com a internet.')
@@ -142,10 +136,6 @@ def automatizar_anki(arquivo, baralho):
         workbook = openpyxl.load_workbook(arquivo)
         # talvez possa usar workbook.active aqui
         sheet = workbook['Sheet']
-
-        # messagebox.showinfo(
-        #     title='Atenção!',
-        #     message='Verifique se o Anki está em execução antes de prosseguir')
 
         qtd_frases = 0
         for linha in sheet.iter_rows(min_row=2, min_col=1):
