@@ -36,9 +36,11 @@ class JanelaIngles(CTk):
 
     def exibir_frame_anki(self):
         self.frame_anki.tkraise()
+        self.geometry('600x600')
 
     def exibir_frame_inicial(self):
         self.frame_inicial.tkraise()
+        self.geometry('600x400')
 
 
 class FrameEscolhaInicial(CTkFrame):
@@ -74,10 +76,9 @@ class FrameAnki(CTkFrame):
         self.grid_anchor('center')
 
         texto_titulo = 'Instruções para utilizar a automação do Anki'
-        texto = '''
-1º - Abra o Anki (caso contrário, não irá funcionar).
-1º - Escolha o arquivo arquivo (.xlsx) que contêm as frases, palavras e traduções.
-3º - Clique em iniciar e aguarde a finalização.'''
+        texto = ('1º - Abra o Anki (caso contrário, não irá funcionar).\n'
+                 '2º - Escolha o arquivo arquivo (.xlsx) que contêm as frases, palavras e traduções.\n'
+                 '3º - Clique em iniciar e aguarde a finalização.')
         CTkLabel(self, text=texto_titulo, justify='left', wraplength=600, **self.configuracoes_titulo).grid(
             row=0, column=0, padx=10, columnspan=2, sticky='w')
         CTkLabel(self, text=texto, justify='left', wraplength=550).grid(
@@ -91,6 +92,10 @@ class FrameAnki(CTkFrame):
         self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
         self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial, height=34)
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20, sticky='ew')
+        CTkLabel(self, text='Log da automação', font=('Roboto', 16, 'bold'),
+                 corner_radius=10).grid(row=4, column=0, pady=(5, 0), columnspan=2, sticky='w')
+        self.campo_log = CTkTextbox(self, height=200, state='disabled')
+        self.campo_log.grid(row=5, column=0, padx=10, pady=(0, 5), columnspan=2, sticky='nsew')
 
     def abrir_janela_deck(self):
         if not self.campo_arquivo.get():
@@ -113,7 +118,7 @@ class FrameAnki(CTkFrame):
         def iniciar_automacao_anki():
             self.botao_iniciar.configure(state='disabled')
             arquivo = self.campo_arquivo.get()
-            automatizar_anki(arquivo=arquivo, baralho=baralho)
+            automatizar_anki(arquivo=arquivo, baralho=baralho, campo_log=self.campo_log)
             self.botao_iniciar.configure(state='normal')
 
         thread_anki = Thread(target=iniciar_automacao_anki, daemon=True)
@@ -171,12 +176,6 @@ class FrameTraducao(CTkFrame):
             self.texto_informativo.configure(text='Corrija as palavras digitadas.', text_color='yellow')
         else:
             JanelaExibicaoFrases(self.palavras_formatadas)
-            # try:
-            #     JanelaExibicaoFrases(self.palavras_formatadas)
-            # except:
-            #     self.texto_informativo.configure(
-            #         text=f'Ocorreu algum erro durante a busca. Tente novamente!',
-            #         wraplength=300)
 
         self.botao_avancar.configure(state='normal')
 

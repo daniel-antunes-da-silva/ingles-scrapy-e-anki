@@ -1,3 +1,4 @@
+import os
 import requests
 import re
 import sqlite3
@@ -5,7 +6,6 @@ import openpyxl
 from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 from tkinter import messagebox
-from gtts import gTTS
 from openpyxl.utils.exceptions import InvalidFileException
 
 
@@ -99,7 +99,7 @@ def adicionar_cartao(baralho, frase, significado_palavra, palavra):
                     ]
                 }],
                 "options": {
-                    "allowDuplicate": True
+                    "allowDuplicate": False
                 }
                 }
         }
@@ -131,13 +131,20 @@ def pegar_baralhos():
         return resposta.json()['result']
 
 
-def automatizar_anki(arquivo, baralho):
+def escrever_log(campo_log, mensagem):
+    campo_log.configure(state='normal')
+    campo_log.insert('end', mensagem + os.linesep)
+    campo_log.configure(state='disabled')
+
+
+def automatizar_anki(arquivo, baralho, campo_log):
+    campo_log = campo_log
+    qtd_frases = 0
     try:
         workbook = openpyxl.load_workbook(arquivo)
         # talvez possa usar workbook.active aqui
         sheet = workbook['Sheet']
 
-        qtd_frases = 0
         for linha in sheet.iter_rows(min_row=2, min_col=1):
             frase = linha[0].value
             palavra = linha[1].value
@@ -145,14 +152,19 @@ def automatizar_anki(arquivo, baralho):
             traducao_palavra = f'{palavra} = {traducao}'
 
             resultado_requisicao = adicionar_cartao(baralho=baralho, frase=frase, significado_palavra=traducao_palavra, palavra=palavra)
-            if resultado_requisicao['error'] is not None:
-                print(resultado_requisicao['error'])
-                return
+            if 'duplicate' in resultado_requisicao['error']:
+                escrever_log(campo_log=campo_log, mensagem=f'Frase referente a "{palavra}" não inserida por estar duplicada.')
+                continue
+            elif resultado_requisicao['error'] is not None:
+                continue
 
             qtd_frases += 1
-        messagebox.showinfo(title='Finalizado!', message=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
     except Exception as e:
         print(f'Aconteceu algum erro na automação Anki. Erro: {e}')
+    finally:
+        escrever_log(campo_log=campo_log,
+                     mensagem=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
+
 
 
 if __name__ == '__main__':
