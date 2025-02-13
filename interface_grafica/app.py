@@ -2,7 +2,7 @@ from threading import Thread
 import openpyxl.utils.exceptions
 from customtkinter import *
 from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha, pegar_baralhos
-from arquivos_extras.anki_automation import automatizar_anki
+from arquivos_extras.funcionalidades_extras import automatizar_anki
 from tkinter import messagebox
 from PIL import Image
 
@@ -74,13 +74,13 @@ class FrameAnki(CTkFrame):
         self.janela_principal = janela_principal
         self.grid_anchor('center')
 
-        texto_titulo = 'Para iniciar a automação do Anki sem erros, é importante seguir esses passos:'
+        texto_titulo = 'Instruções para utilizar a automação do Anki'
         texto = '''
-1º - Abra o Anki e veja o nome do baralho que vai inserir.
-1º - Escolha o arquivo arquivo que contêm as frases, palavras e traduções.
-3º - Clique em iniciar e clique na janela do Anki para mantê-la selecionada'''
+1º - Abra o Anki (caso contrário, não irá funcionar).
+1º - Escolha o arquivo arquivo (.xlsx) que contêm as frases, palavras e traduções.
+3º - Clique em iniciar e aguarde a finalização.'''
         CTkLabel(self, text=texto_titulo, justify='left', wraplength=600, **self.configuracoes_titulo).grid(
-            row=0, column=0, padx=10, columnspan=2)
+            row=0, column=0, padx=10, columnspan=2, sticky='w')
         CTkLabel(self, text=texto, justify='left', wraplength=550).grid(
             row=1, column=0, padx=10, pady=(0, 20), columnspan=2)
         self.campo_arquivo = CTkEntry(self, placeholder_text='Caminho do arquivo', width=330, height=34)
@@ -211,8 +211,6 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.grab_set()
         self.focus_force()
 
-        self.contador = 0
-
         self.texto_frases = CTkLabel(self, text='Exemplos de frases', **self.configuracoes_titulo)
         self.texto_frases.grid(row=0, column=0, padx=10, pady=10)
         self.gerenciador_abas = CTkTabview(self, fg_color='gray13')
@@ -225,6 +223,8 @@ class JanelaExibicaoFrases(CTkToplevel):
         # Cria uma variável StringVar para armazenar a frase selecionada pelo usuário.
         # Essa variável será compartilhada entre todos os radiobuttons da aba atual.
         self.var_frases = {}
+
+        self.contador = {}
 
         # Iniciando Thread que traduz as palavras digitadas
         thread_traducao = Thread(target=self.traduzir_palavras, daemon=True)
@@ -254,7 +254,9 @@ class JanelaExibicaoFrases(CTkToplevel):
 
     def criar_abas_e_radiobuttons(self, palavras):
         for i, palavra in enumerate(palavras, start=3):
-            frases_a_exibir = buscador_de_frases(palavra, self.contador)
+            self.contador[palavra] = 0
+            print(f'Contador de {palavra} criar as abas e radiobuttons: {self.contador[palavra]}')
+            frases_a_exibir = buscador_de_frases(palavra, self.contador[palavra])
             if not frases_a_exibir:
                 CTkLabel(self, text=f'Palavra "{palavra}" não encontrada. Verifique a grafia.',
                          text_color='yellow').grid(row=i, column=0, padx=5, pady=10)
@@ -280,9 +282,9 @@ class JanelaExibicaoFrases(CTkToplevel):
     def gerar_frases(self):
         palavra = self.gerenciador_abas.get()
         aba_atual = self.gerenciador_abas.tab(palavra)
-        self.contador += 10
-
-        novas_frases = buscador_de_frases(palavra, self.contador)
+        self.contador[palavra] += 10
+        print(f'Contador de {palavra} ao gerar mais frases: {self.contador[palavra]}')
+        novas_frases = buscador_de_frases(palavra, self.contador[palavra])
 
         if not novas_frases:
             return

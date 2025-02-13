@@ -1,7 +1,7 @@
 import requests
 import re
-import openpyxl
 import sqlite3
+import openpyxl
 from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 from tkinter import messagebox
@@ -135,6 +135,35 @@ def pegar_baralhos():
                              message='Verifique se o Anki está aberto e verifique sua conexão com a internet.')
     else:
         return resposta.json()['result']
+
+
+def automatizar_anki(arquivo, baralho):
+    try:
+        workbook = openpyxl.load_workbook(arquivo)
+        # talvez possa usar workbook.active aqui
+        sheet = workbook['Sheet']
+
+        # messagebox.showinfo(
+        #     title='Atenção!',
+        #     message='Verifique se o Anki está em execução antes de prosseguir')
+
+        qtd_frases = 0
+        for linha in sheet.iter_rows(min_row=2, min_col=1):
+            frase = linha[0].value
+            palavra = linha[1].value
+            traducao = linha[2].value
+            traducao_palavra = f'{palavra} = {traducao}'
+
+            resultado_requisicao = adicionar_cartao(baralho=baralho, frase=frase, significado_palavra=traducao_palavra, palavra=palavra)
+            if resultado_requisicao['error'] is not None:
+                print(resultado_requisicao['error'])
+                return
+
+            qtd_frases += 1
+        messagebox.showinfo(title='Finalizado!', message=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
+    except Exception as e:
+        print(f'Aconteceu algum erro na automação Anki. Erro: {e}')
+
 
 if __name__ == '__main__':
     pegar_baralhos()
