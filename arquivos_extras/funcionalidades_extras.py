@@ -43,7 +43,11 @@ def tradutor_de_palavras(palavras_a_traduzir: list):
         resposta = requests.get(url, headers=headers).text
         # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
         padrao_palavras = r'<span class="display-term">(.*?)</span>'
-        palavras = re.findall(padrao_palavras, resposta)[:4]
+        palavras = re.findall(padrao_palavras, resposta)
+        if len(palavras) > 4:
+            palavras = palavras[:4]
+        else:
+            palavras = palavras[:]
         palavras_traduzidas[palavra] = palavras
     print(palavras_traduzidas)
     return palavras_traduzidas
@@ -99,7 +103,7 @@ def adicionar_cartao(baralho, frase, significado_palavra, palavra):
                     ]
                 }],
                 "options": {
-                    "allowDuplicate": False
+                    "allowDuplicate": True
                 }
                 }
         }
@@ -134,6 +138,7 @@ def pegar_baralhos():
 def escrever_log(campo_log, mensagem):
     campo_log.configure(state='normal')
     campo_log.insert('end', mensagem + os.linesep)
+    campo_log.see('end')
     campo_log.configure(state='disabled')
 
 
@@ -152,19 +157,17 @@ def automatizar_anki(arquivo, baralho, campo_log):
             traducao_palavra = f'{palavra} = {traducao}'
 
             resultado_requisicao = adicionar_cartao(baralho=baralho, frase=frase, significado_palavra=traducao_palavra, palavra=palavra)
-            if 'duplicate' in resultado_requisicao['error']:
-                escrever_log(campo_log=campo_log, mensagem=f'Frase referente a "{palavra}" não inserida por estar duplicada.')
-                continue
-            elif resultado_requisicao['error'] is not None:
-                continue
 
-            qtd_frases += 1
+            if resultado_requisicao['error'] is None:
+                qtd_frases += 1
+                escrever_log(campo_log=campo_log,
+                             mensagem=f'✔ Cartão referente a "{palavra}" inserido com sucesso!')
     except Exception as e:
-        print(f'Aconteceu algum erro na automação Anki. Erro: {e}')
+        escrever_log(campo_log=campo_log,
+                     mensagem=f'Aconteceu algum erro na automação Anki. Informe o erro ao desenvolvedor: {e}')
     finally:
         escrever_log(campo_log=campo_log,
                      mensagem=f'A sua automação terminou. Foram adicionadas {qtd_frases} frases!')
-
 
 
 if __name__ == '__main__':

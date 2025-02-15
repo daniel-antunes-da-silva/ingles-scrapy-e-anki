@@ -33,10 +33,11 @@ class JanelaIngles(CTk):
 
     def exibir_frame_traducao(self):
         self.frame_traducao.tkraise()
+        self.geometry('600x330')
 
     def exibir_frame_anki(self):
         self.frame_anki.tkraise()
-        self.geometry('600x600')
+        self.geometry('650x600')
 
     def exibir_frame_inicial(self):
         self.frame_inicial.tkraise()
@@ -68,7 +69,7 @@ class FrameAnki(CTkFrame):
         self.fonte_titulo = CTkFont(weight='bold', size=20)
         self.configuracoes_titulo = {
             'font': self.fonte_titulo,
-            'text_color': 'white',
+            'text_color': '#51EDFF',
             'height': 60
         }
 
@@ -96,6 +97,7 @@ class FrameAnki(CTkFrame):
                  corner_radius=10).grid(row=4, column=0, pady=(5, 0), columnspan=2, sticky='w')
         self.campo_log = CTkTextbox(self, height=200, state='disabled')
         self.campo_log.grid(row=5, column=0, padx=10, pady=(0, 5), columnspan=2, sticky='nsew')
+        self.campo_log.configure()
 
     def abrir_janela_deck(self):
         if not self.campo_arquivo.get():
@@ -112,6 +114,7 @@ class FrameAnki(CTkFrame):
             defaultextension='.xlsx'
         )
         if caminho_arquivo:
+            self.campo_arquivo.delete(0, 'end')
             self.campo_arquivo.insert(0, caminho_arquivo)
 
     def iniciar_thread_anki(self, baralho):
@@ -236,12 +239,12 @@ class JanelaExibicaoFrases(CTkToplevel):
         # Essa exibição faz quebras de linhas
         frases_formatadas = []
         for frase in frases:
-            if frase.count(' ') >= 15:
+            if frase.count(' ') >= 25:
                 frase = frase.split(' ')
                 frase_copia = ''
 
                 for indice, trecho_da_frase in enumerate(frase, start=0):
-                    if indice % 15 == 0 and indice != 0:
+                    if indice % 25 == 0 and indice != 0:
                         frase_copia += os.linesep
                     frase_copia += trecho_da_frase + ' '
                 frases_formatadas.append(frase_copia.strip())
