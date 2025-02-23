@@ -10,6 +10,10 @@ from openpyxl.utils.exceptions import InvalidFileException
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 import random
 
 
@@ -54,8 +58,11 @@ def iniciar_driver():
 
     user_agent = random.choice(USER_AGENTS)
 
-    arguments = ['--lang=pt-BR', '--window-size=1000,1000', '--incognito', '--headless=new',
-                 f'--user-agent={user_agent}']
+    arguments = ['--lang=pt-BR', '--window-size=800,800', '--incognito', '--headless=new',
+                 f'--user-agent={user_agent}', '--disable-blink-features=AutomationControlled',
+                 '--disable-images', '--disable-webgl', '--disable-gpu', '--disable-dev-shm-usage',
+                 '--no-sandbox', '--disable-extensions', '--disable-software-rasterizer']
+
     for argument in arguments:
         chrome_options.add_argument(argument)
 
@@ -70,22 +77,51 @@ def iniciar_driver():
 
 
 def tradutor_de_palavras(palavras_a_traduzir: list):
+    # conteudo_pagina = driver.page_source
+    # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
+    # padrao_palavras = r'<span class="display-term">(.*?)</span>'
+    # palavras = re.findall(padrao_palavras, conteudo_pagina)
+
     driver = iniciar_driver()
 
     palavras_traduzidas = {}
     for palavra in palavras_a_traduzir:
-        driver.get(f'https://context.reverso.net/traducao/ingles-portugues/{palavra}')
-        conteudo_pagina = driver.page_source
+        while True:
+            try:
+                driver.get(f'https://context.reverso.net/traducao/ingles-portugues/{palavra}')
 
-        # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
-        padrao_palavras = r'<span class="display-term">(.*?)</span>'
-        palavras = re.findall(padrao_palavras, conteudo_pagina)
-        if len(palavras) >= 4:
-            palavras = palavras[:4]
-        else:
-            palavras = palavras[:]
-        palavras_traduzidas[palavra] = palavras
-        sleep(3)
+                try:
+                    alert = driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alerta encontrado: {alert_text}")
+                    alert.accept()  # Aceita o alerta
+                    print('############  ACEITANDO O ALERTA  ############')
+                except NoAlertPresentException:
+                    pass  # Não há alerta presente
+
+                driver.execute_script("window.alert = function() {};")  # Desabilita alertas
+                driver.execute_script("window.confirm = function() { return true; };")  # Confirma automaticamente
+                driver.execute_script("window.prompt = function() { return null; };")  # Ignora prompts
+
+                # Espera até que os elementos estejam presentes no DOM
+                wait = WebDriverWait(driver, 3)  # Timeout de 10 segundos
+                elementos = wait.until(
+                    EC.presence_of_all_elements_located((By.XPATH, '//div[@id="translations-content"]//span[@class="display-term"]')))
+                driver.execute_script("window.stop();")
+
+                palavras = []
+                for indice, elemento in enumerate(elementos):
+                    palavras.append(elemento.text)
+                    if indice == 3:
+                        break
+
+                palavras_traduzidas[palavra] = palavras
+                print(palavras_traduzidas)
+                sleep(1)
+                break
+            except Exception as error:
+                print(error)
+
     print(palavras_traduzidas)
     driver.quit()
     return palavras_traduzidas

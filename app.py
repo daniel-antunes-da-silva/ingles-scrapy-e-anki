@@ -1,6 +1,7 @@
 from threading import Thread
 from customtkinter import *
-from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha, pegar_baralhos
+from arquivos_extras.funcionalidades_extras import buscador_de_frases, tradutor_de_palavras, GerenciadorPlanilha, \
+    pegar_baralhos
 from arquivos_extras.funcionalidades_extras import automatizar_anki
 from tkinter import messagebox
 from PIL import Image
@@ -94,7 +95,8 @@ class FrameAnki(CTkFrame):
         self.botao_iniciar = CTkButton(self, text='Iniciar', command=self.abrir_janela_deck, height=34,
                                        width=200, font=CTkFont(weight='bold'))
         self.botao_iniciar.grid(row=3, column=0, padx=10, pady=20, sticky='ew')
-        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial, height=34)
+        self.botao_voltar = CTkButton(self, text='< Voltar', command=self.janela_principal.exibir_frame_inicial,
+                                      height=34)
         self.botao_voltar.grid(row=3, column=1, padx=10, pady=20, sticky='ew')
         CTkLabel(self, text='Log da automação', font=('Roboto', 16, 'bold'),
                  corner_radius=10).grid(row=4, column=0, pady=(5, 0), columnspan=2, sticky='w')
@@ -145,7 +147,8 @@ class FrameTraducao(CTkFrame):
         self.palavras_formatadas = None
         self.grid_anchor('center')
 
-        self.texto_palavras = CTkLabel(self, text='Digite palavras em inglês, separadas por vírgula.', **self.configuracoes_titulo)
+        self.texto_palavras = CTkLabel(self, text='Digite palavras em inglês, separadas por vírgula.',
+                                       **self.configuracoes_titulo)
         self.texto_palavras.grid(row=0, column=0, padx=10, pady=(10, 0), sticky='w', columnspan=2)
         self.texto_exemplo = CTkLabel(self, text='Ex: window, table, wall')
         self.texto_exemplo.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='w', columnspan=2)
@@ -158,7 +161,8 @@ class FrameTraducao(CTkFrame):
 
         self.botao_avancar = CTkButton(self, text='Avançar', height=34, command=self.iniciar_thread_avancar)
         self.botao_avancar.grid(row=4, column=0, padx=10, pady=10, sticky='ew')
-        self.botao_voltar = CTkButton(self, text='< Voltar', height=34, command=self.janela_principal.exibir_frame_inicial)
+        self.botao_voltar = CTkButton(self, text='< Voltar', height=34,
+                                      command=self.janela_principal.exibir_frame_inicial)
         self.botao_voltar.grid(row=4, column=1, padx=10, pady=10, sticky='ew')
 
     def avancar_etapa(self):
@@ -220,11 +224,12 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.gerenciador_abas.grid(row=1, column=0, padx=10, pady=10)
         self.gerenciador_abas._segmented_button.configure(font=("Arial", 18, "bold"))
 
-        self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
-        self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
+        self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados,
+                                      width=180, height=34)
+        self.botao_salvar.grid(row=2, column=0, padx=10, pady=(20, 5))
 
         self.txt_info_estado = CTkLabel(self, text='')
-        self.txt_info_estado.grid(row=3, column=0, padx=10, pady=20)
+        self.txt_info_estado.grid(row=3, column=0, padx=10, pady=(10, 10))
 
         self.significados_palavra = None
         self.after(1000, self.verificar_selecao)
@@ -282,7 +287,8 @@ class JanelaExibicaoFrases(CTkToplevel):
             for indice, frase in enumerate(frases_a_exibir, start=2):
                 # Apenas exibe a frase formatada, mas não será o valor associado a ela, e sim a frase sem formatação (sem quebra de linha).
                 frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
-                CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra], value=frase).grid(
+                CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra],
+                               value=frase).grid(
                     row=indice, column=0, padx=10, pady=15, sticky='w')
             botao_gerar = CTkButton(self.aba_palavra, text='Gerar mais', command=self.gerar_frases)
             botao_gerar.grid(row=12, column=0, padx=10, pady=10)
@@ -325,24 +331,38 @@ class JanelaExibicaoFrases(CTkToplevel):
         valores_selecionados = []
         for valor in self.var_frases.values():
             valores_selecionados.append(valor.get())
-        if all(valores_selecionados) and self.significados_palavra:
-            self.botao_salvar.configure(state='normal')
+        if all(valores_selecionados) and not self.significados_palavra:
+            self.txt_info_estado.configure(text_color='yellow', text='Aguarde a tradução das palavras...')
+        elif all(valores_selecionados) and self.significados_palavra:
+            self.txt_info_estado.configure(text_color='#51EDFF', text='Agora você já pode salvar o arquivo!')
+            self.botao_salvar.configure(state='normal', font=('Arial', 16, 'bold'))
         self.after(1000, self.verificar_selecao)
 
     def traduzir_palavras(self):
         self.significados_palavra = tradutor_de_palavras(self.palavras_formatadas)
 
     def salvar_dados(self):
+        palavras_nao_encontradas = []
         try:
             planilha = GerenciadorPlanilha()
             for palavra, var_frase in self.var_frases.items():
-                significados = self.significados_palavra[palavra]
-                significados = ', '.join(significados)
-                frase_selecionada = var_frase.get()
-                planilha.adicionar_dados(frase_selecionada, palavra, significados)
-                print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
-
+                if palavra in self.significados_palavra:
+                    significados = self.significados_palavra[palavra]
+                    significados = ', '.join(significados)
+                    frase_selecionada = var_frase.get()
+                    planilha.adicionar_dados(frase_selecionada, palavra, significados)
+                    print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
+                else:
+                    palavras_nao_encontradas.append(f'"{palavra}"')
+            if palavras_nao_encontradas:
+                messagebox.showwarning(
+                    title='Atenção!',
+                    message=f'A planilha será salva normalmente, mas não houve tradução para '
+                            f'{', '.join(palavras_nao_encontradas)}. Isso pode ter acontecido por'
+                            f' ser uma palavra que depende de maiores explicações, ou pode ter ocorrido um erro.'
+                )
             planilha.salvar_planilha()
+            self.txt_info_estado.configure(text='')
         except AttributeError:
             messagebox.showwarning(title='Aguarde!',
                                    message='A tradução ainda está em andamento. Aguarde a finalização!')
@@ -376,7 +396,8 @@ class JanelaEscolhaBaralho(CTkToplevel):
             self.deiconify()
             for indice, baralho in enumerate(baralhos, start=1):
                 CTkRadioButton(self, text=baralho, command=self.iniciar_automacao_e_fechar_janela,
-                               variable=self.variavel_deck, value=baralho).grid(row=indice, column=0, padx=10, pady=5, sticky='w')
+                               variable=self.variavel_deck, value=baralho).grid(row=indice, column=0, padx=10, pady=5,
+                                                                                sticky='w')
         else:
             self.destroy()
 
