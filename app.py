@@ -223,6 +223,12 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.botao_salvar = CTkButton(self, text='Salvar dados', state='disabled', command=self.salvar_dados)
         self.botao_salvar.grid(row=2, column=0, padx=10, pady=20)
 
+        self.txt_info_estado = CTkLabel(self, text='')
+        self.txt_info_estado.grid(row=3, column=0, padx=10, pady=20)
+
+        self.significados_palavra = None
+        self.after(1000, self.verificar_selecao)
+
         # Cria uma variável StringVar para armazenar a frase selecionada pelo usuário.
         # Essa variável será compartilhada entre todos os radiobuttons da aba atual.
         self.var_frases = {}
@@ -276,8 +282,7 @@ class JanelaExibicaoFrases(CTkToplevel):
             for indice, frase in enumerate(frases_a_exibir, start=2):
                 # Apenas exibe a frase formatada, mas não será o valor associado a ela, e sim a frase sem formatação (sem quebra de linha).
                 frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
-                CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra], value=frase,
-                               command=self.verificar_selecao).grid(
+                CTkRadioButton(self.aba_palavra, text=frase_formatada, variable=self.var_frases[palavra], value=frase).grid(
                     row=indice, column=0, padx=10, pady=15, sticky='w')
             botao_gerar = CTkButton(self.aba_palavra, text='Gerar mais', command=self.gerar_frases)
             botao_gerar.grid(row=12, column=0, padx=10, pady=10)
@@ -313,15 +318,16 @@ class JanelaExibicaoFrases(CTkToplevel):
             # e sim a frase sem formatação (sem quebra de linha).
             frase_formatada = self.formatar_frases_para_exibicao([frase])[0]
             CTkRadioButton(aba_atual, text=frase_formatada, variable=self.var_frases[palavra],
-                           value=frase, command=self.verificar_selecao).grid(
+                           value=frase).grid(
                 row=indice, column=0, padx=10, pady=15, sticky='w')
 
     def verificar_selecao(self):
         valores_selecionados = []
         for valor in self.var_frases.values():
             valores_selecionados.append(valor.get())
-        if all(valores_selecionados):
+        if all(valores_selecionados) and self.significados_palavra:
             self.botao_salvar.configure(state='normal')
+        self.after(1000, self.verificar_selecao)
 
     def traduzir_palavras(self):
         self.significados_palavra = tradutor_de_palavras(self.palavras_formatadas)

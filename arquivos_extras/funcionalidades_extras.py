@@ -85,7 +85,7 @@ def tradutor_de_palavras(palavras_a_traduzir: list):
         else:
             palavras = palavras[:]
         palavras_traduzidas[palavra] = palavras
-        sleep(2)
+        sleep(3)
     print(palavras_traduzidas)
     driver.quit()
     return palavras_traduzidas
