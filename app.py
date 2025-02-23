@@ -11,13 +11,13 @@ class JanelaIngles(CTk):
         super().__init__(*args, **kwargs)
 
         set_appearance_mode('dark')
-        set_default_color_theme(r'..\arquivos_extras\tema.json')
+        set_default_color_theme(r'arquivos_extras\tema.json')
 
         self.geometry('600x400')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.configure(padx=30, pady=30)
-        self.iconbitmap(r'..\imagens\icone_programa.ico')
+        self.iconbitmap(r'imagens\icone_programa.ico')
 
         self.title('Escolher funcionalidade')
 
@@ -34,14 +34,17 @@ class JanelaIngles(CTk):
     def exibir_frame_traducao(self):
         self.frame_traducao.tkraise()
         self.geometry('600x330')
+        self.title('Pesquisar palavras')
 
     def exibir_frame_anki(self):
         self.frame_anki.tkraise()
         self.geometry('650x600')
+        self.title('Automação Anki')
 
     def exibir_frame_inicial(self):
         self.frame_inicial.tkraise()
         self.geometry('600x400')
+        self.title('Escolher funcionalidade')
 
 
 class FrameEscolhaInicial(CTkFrame):
@@ -50,8 +53,8 @@ class FrameEscolhaInicial(CTkFrame):
         self.janela_principal = janela_principal
         self.grid_anchor('center')
 
-        imagem_busca = CTkImage(dark_image=Image.open(r'..\imagens\imagem_busca.png'), size=(200, 200))
-        imagem_automacao_anki = CTkImage(dark_image=Image.open(r'..\imagens\imagem_automacao_anki.png'),
+        imagem_busca = CTkImage(dark_image=Image.open(r'imagens/imagem_busca.png'), size=(200, 200))
+        imagem_automacao_anki = CTkImage(dark_image=Image.open(r'imagens/imagem_automacao_anki.png'),
                                          size=(200, 200))
 
         self.btn_iniciar_janela_buscas = CTkButton(self, text='', image=imagem_busca, fg_color='transparent',
@@ -324,15 +327,19 @@ class JanelaExibicaoFrases(CTkToplevel):
         self.significados_palavra = tradutor_de_palavras(self.palavras_formatadas)
 
     def salvar_dados(self):
-        planilha = GerenciadorPlanilha()
-        for palavra, var_frase in self.var_frases.items():
-            significados = self.significados_palavra[palavra]
-            significados = ', '.join(significados)
-            frase_selecionada = var_frase.get()
-            planilha.adicionar_dados(frase_selecionada, palavra, significados)
-            print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
+        try:
+            planilha = GerenciadorPlanilha()
+            for palavra, var_frase in self.var_frases.items():
+                significados = self.significados_palavra[palavra]
+                significados = ', '.join(significados)
+                frase_selecionada = var_frase.get()
+                planilha.adicionar_dados(frase_selecionada, palavra, significados)
+                print(f'Frase selecionada para "{palavra}": {frase_selecionada}')
 
-        planilha.salvar_planilha()
+            planilha.salvar_planilha()
+        except AttributeError:
+            messagebox.showwarning(title='Aguarde!',
+                                   message='A tradução ainda está em andamento. Aguarde a finalização!')
 
 
 class JanelaEscolhaBaralho(CTkToplevel):

@@ -7,11 +7,16 @@ from tkinter import filedialog
 from openpyxl.worksheet.worksheet import Worksheet
 from tkinter import messagebox
 from openpyxl.utils.exceptions import InvalidFileException
+from time import sleep
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import random
+
 
 
 def buscador_de_frases(palavra, contador_offset):
     try:
-        with sqlite3.connect(r'..\arquivos_extras\frases.db') as conexao:
+        with sqlite3.connect(r'arquivos_extras\frases.db') as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
             SELECT texto
@@ -32,24 +37,57 @@ def buscador_de_frases(palavra, contador_offset):
     except Exception as error:
         print(error)
 
+def iniciar_driver():
+    chrome_options = Options()
+
+    USER_AGENTS = ['Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25',
+                   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                   "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:115.0) Gecko/20100101 Firefox/115.0",
+                   "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:114.0) Gecko/20100101 Firefox/114.0",
+                   "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3) AppleWebKit/537.36 (KHTML, like Gecko) Version/14.1 Safari/537.36",
+                   "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/537.36",
+                   "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Mobile Safari/537.36",
+                   "Mozilla/5.0 (Linux; Android 10; SM-A205U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+                   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/119.0.0.0 Safari/537.36",
+                   ]
+
+    user_agent = random.choice(USER_AGENTS)
+
+    arguments = ['--lang=pt-BR', '--window-size=1000,1000', '--incognito', '--headless=new',
+                 f'--user-agent={user_agent}']
+    for argument in arguments:
+        chrome_options.add_argument(argument)
+
+    chrome_options.add_experimental_option('prefs', {
+        'download.prompt_for_download': False,
+        'profile.default_content_setting_values.notifications': 2,
+        'profile.default_content_setting_values.automatic_downloads': 1,
+    })
+    driver = webdriver.Chrome(options=chrome_options)
+
+    return driver
+
 
 def tradutor_de_palavras(palavras_a_traduzir: list):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
-    }
+    driver = iniciar_driver()
+
     palavras_traduzidas = {}
     for palavra in palavras_a_traduzir:
-        url = f'https://context.reverso.net/traducao/ingles-portugues/{palavra}'
-        resposta = requests.get(url, headers=headers).text
+        driver.get(f'https://context.reverso.net/traducao/ingles-portugues/{palavra}')
+        conteudo_pagina = driver.page_source
+
         # Expressão regular para capturar o conteúdo dentro do <span class="display-term">
         padrao_palavras = r'<span class="display-term">(.*?)</span>'
-        palavras = re.findall(padrao_palavras, resposta)
-        if len(palavras) > 4:
+        palavras = re.findall(padrao_palavras, conteudo_pagina)
+        if len(palavras) >= 4:
             palavras = palavras[:4]
         else:
             palavras = palavras[:]
         palavras_traduzidas[palavra] = palavras
+        sleep(2)
     print(palavras_traduzidas)
+    driver.quit()
     return palavras_traduzidas
 
 
@@ -66,6 +104,7 @@ class GerenciadorPlanilha:
         caminho = filedialog.asksaveasfilename(
             title='Escolha o local para salvar',
             filetypes=[('Arquivo de planilha', '*.xlsx')],
+            initialfile='Planilha Anki',
             defaultextension='.xlsx',
             confirmoverwrite=True
         )
@@ -171,4 +210,4 @@ def automatizar_anki(arquivo, baralho, campo_log):
 
 
 if __name__ == '__main__':
-    pegar_baralhos()
+    tradutor_de_palavras(['pie', 'piece', 'gold', 'silver'])
