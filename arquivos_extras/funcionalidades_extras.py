@@ -90,14 +90,15 @@ def tradutor_de_palavras(palavras_a_traduzir: list):
             try:
                 driver.get(f'https://context.reverso.net/traducao/ingles-portugues/{palavra}')
 
+                # Tratando alerta que aparece na página.
                 try:
                     alert = driver.switch_to.alert
                     alert_text = alert.text
                     print(f"Alerta encontrado: {alert_text}")
-                    alert.accept()  # Aceita o alerta
-                    print('############  ACEITANDO O ALERTA  ############')
+                    alert.accept()
+                    # print('############  ACEITANDO O ALERTA  ############')
                 except NoAlertPresentException:
-                    pass  # Não há alerta presente
+                    pass
 
                 driver.execute_script("window.alert = function() {};")  # Desabilita alertas
                 driver.execute_script("window.confirm = function() { return true; };")  # Confirma automaticamente
