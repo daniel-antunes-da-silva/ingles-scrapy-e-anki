@@ -40,7 +40,7 @@ Uma nova janela será aberta para que o usuário escolha o deck (baralho do Anki
 
 ---
 
-### Habilidades utilizadas
+## Habilidades utilizadas
 
 - Python  
 - Selenium  
@@ -59,7 +59,7 @@ Uma nova janela será aberta para que o usuário escolha o deck (baralho do Anki
 
 ## Considerações finais
 
-Como dito anteriormente, ssse projeto foi criado com um objetivo pessoal e atende a uma necessidade específica. 
+Como dito anteriormente, esse projeto foi criado com um objetivo pessoal e atende a uma necessidade específica. 
 Porém, se por algum motivo você quiser utilizá-lo na sua máquina, precisará também do banco de dados que eu não coloquei aqui nos arquivos. Para isso, pode entrar em contato comigo que eu faço o envio! :)
 
 Se quiser mais detalhes sobre o projeto ou se precisar entrar em contato comigo, pode me enviar uma mensagem através do LinkedIn ou e-mail, estão na bio do meu perfil!
